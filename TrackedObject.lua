@@ -45,6 +45,8 @@ function TrackedObject:new(guid, type, data, parentFrame, config)
 
     trackedObject.internalState = {
         timers = {},
+        currentTimerType = nil,
+        timerIsDirty = false
     }
     
     trackedObject.frame = FramePool:Acquire()
@@ -63,11 +65,8 @@ function TrackedObject:new(guid, type, data, parentFrame, config)
         trackedObject.charges = trackedObject.chargeFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         trackedObject.charges:SetPoint("CENTER", trackedObject.frame, "BOTTOMRIGHT", -10, 10)
 
-        if data.hasCharges then
-            print(data.id)
-            local charges = C_Spell.GetSpellCharges(data.id)
-            trackedObject.charges:SetText(tostring(charges.currentCharges))
-        end
+        local charges = C_Spell.GetSpellCharges(data.id)
+        trackedObject.charges:SetText(tostring(charges.currentCharges))
     end
 
     trackedObject.Cooldown = CreateFrame("Cooldown", nil, trackedObject.frame, "CooldownFrameTemplate")
@@ -75,7 +74,6 @@ function TrackedObject:new(guid, type, data, parentFrame, config)
     trackedObject.Cooldown:SetDrawEdge(false)
     trackedObject.Cooldown:SetDrawSwipe(true)
     trackedObject.Cooldown:SetSwipeColor(0, 0, 0, 0.8)
-    trackedObject.Cooldown:SetHideCountdownNumbers(false)
     trackedObject.Cooldown:SetReverse(false)
     
     setmetatable(trackedObject, TrackedObject)
@@ -100,8 +98,8 @@ CDTimerTypes = {
     Aura = 3,
 }
 
-function TrackedObject:Update(DirtyState)
-    if(DirtyState["spellID"][self.data.id] or (self.data.hasCharges and DirtyState["charges"])) then
+function TrackedObject:Update(DirtyStateContext)
+    if(DirtyStateContext["spellID"][self.data.id] or (self.data.hasCharges and DirtyStateContext["charges"])) then
         self.internalState.timers = {}
         
         if self.type == TrackedObjectTypes.Spell then
@@ -109,28 +107,36 @@ function TrackedObject:Update(DirtyState)
                 local charges = C_Spell.GetSpellCharges(self.data.id)
                 if charges then
                     self.charges:SetText(tostring(charges.currentCharges))
-                    local timer = self.CreateTimer(CDTimerTypes.Charge, charges.cooldownStartTime, charges.cooldownDuration)
+                    local timer = self.CreateTimer(CDTimerTypes.Charge, charges.cooldownStartTime, charges.cooldownDuration, charges.chargeModRate)
                     table.insert(self.internalState.timers, timer)
                 end
             end
             
-            local cooldownData = C_Spell.GetSpellCooldown(self.data.id)
-            
-            if self.data.linkedSpellIDs and (self.data.selfAura or self.data.hasAura) then
+            -- Not Great
+            local auraByName = C_UnitAuras.GetAuraDataBySpellName("player", self.data.name, nil)
+
+            if not auraByName and self.data.linkedSpellIDs and (self.data.selfAura or self.data.hasAura) then
                 for _, linkedSpellId in pairs(self.data.linkedSpellIDs) do
                     local aura = C_UnitAuras.GetPlayerAuraBySpellID(linkedSpellId)
                     if aura then
-                        local timer = self.CreateTimer(CDTimerTypes.Aura, aura.expirationTime - aura.duration, aura.duration)
+                        local timer = self.CreateTimer(CDTimerTypes.Aura, aura.expirationTime - aura.duration, aura.duration, aura.modRate)
                         table.insert(self.internalState.timers, timer)
                     end
                 end
+            elseif auraByName then
+                local timer = self.CreateTimer(CDTimerTypes.Aura, auraByName.expirationTime - auraByName.duration, auraByName.duration, auraByName.modRate)
+                table.insert(self.internalState.timers, timer)
             end
-        
+            
+            local cooldownData = C_Spell.GetSpellCooldown(self.data.id)
             if cooldownData and cooldownData.duration > 1 then
-                local timer = self.CreateTimer(CDTimerTypes.Cooldown, cooldownData.startTime, cooldownData.duration)
+                local timer = self.CreateTimer(CDTimerTypes.Cooldown, cooldownData.startTime, cooldownData.duration, cooldownData.modRate)
                 table.insert(self.internalState.timers, timer)
             end
         end
+
+        self.internalState.timerIsDirty = true
+        self.internalState.currentTimerType = nil
     end
 
     if #self.internalState.timers > 0 then
@@ -139,37 +145,48 @@ function TrackedObject:Update(DirtyState)
 
         for _, t in ipairs(self.internalState.timers) do
             local isOld = t.startTime + t.duration < GetTime()
-            if t.type > type and not isOld then
+            if (t.type > type) and not isOld then
                 type = t.type
                 timer = t
             end
         end
 
-        if type == CDTimerTypes.Charge then
-            self.Cooldown:SetCooldown(timer.startTime, timer.duration)
-            self.Cooldown:SetDrawSwipe(false)
-            self.Cooldown:SetDrawEdge(true)
-            self.Cooldown:SetReverse(false)
-        elseif type == CDTimerTypes.Cooldown then
-            self.Cooldown:SetCooldown(timer.startTime, timer.duration)
-            self.Cooldown:SetDrawSwipe(true)
-            self.Cooldown:SetDrawEdge(false)
-            self.Cooldown:SetReverse(false)
-        elseif type == CDTimerTypes.Aura then
-            self.Cooldown:SetCooldown(timer.startTime, timer.duration)
-            self.Cooldown:SetDrawSwipe(true)
-            self.Cooldown:SetDrawEdge(false)
-            self.Cooldown:SetReverse(true)
-        else
-            self.Cooldown:Clear()
+        local shouldUpdate = false
+        if self.internalState.timerIsDirty or type ~= self.internalState.currentTimerType then
+            self.internalState.currentTimerType = type
+            self.internalState.timerIsDirty = false
+            shouldUpdate = true
+        end
+
+
+        if shouldUpdate then
+            if type == CDTimerTypes.Charge then
+                self.Cooldown:SetCooldown(timer.startTime, timer.duration, timer.modRate)
+                self.Cooldown:SetDrawSwipe(false)
+                self.Cooldown:SetDrawEdge(true)
+                self.Cooldown:SetReverse(false)
+            elseif type == CDTimerTypes.Cooldown then
+                self.Cooldown:SetCooldown(timer.startTime, timer.duration, timer.modRate)
+                self.Cooldown:SetDrawSwipe(true)
+                self.Cooldown:SetDrawEdge(false)
+                self.Cooldown:SetReverse(false)
+            elseif type == CDTimerTypes.Aura then
+                self.Cooldown:SetCooldown(timer.startTime, timer.duration, timer.modRate)
+                self.Cooldown:SetDrawSwipe(true)
+                self.Cooldown:SetDrawEdge(false)
+                self.Cooldown:SetReverse(true)
+            else
+                self.Cooldown:Clear()
+            end
         end
     end
 end
 
-function TrackedObject.CreateTimer(type, startTime, duration)
+function TrackedObject.CreateTimer(type, startTime, duration, modRate)
     local timer = {
         startTime = startTime,
         duration = duration,
+        modRate = modRate,
         type = type
     }
     return timer

@@ -24,6 +24,10 @@ function NeebelCore:OnInitialize()
     local playerLoc = PlayerLocation:CreateFromUnit("player")
     local _, _ , classId = C_PlayerInfo.GetClass(playerLoc)
     NeebelCore.classId = classId
+
+    local test = C_Spell.GetSpellIDForSpellIdentifier("Shadow Blades")
+    local test2 = C_UnitAuras.GetCooldownAuraBySpellID(test)
+    print(test, test2)
     
     local currentSpecIndex = GetSpecialization()
     if currentSpecIndex then
@@ -64,7 +68,6 @@ function NeebelCore:OnInitialize()
     for k, v in pairs(env.spellLookup) do
         if(k == 185313 or k == 121471) then
             local guid = GenerateGUID()
-            print(guid)
             local item = TrackedObject.CreateTrackedSpell(guid, k, UIParent, nil)
             item:SetPoint("CENTER", env.baseSize * (1 + counter), 0)
             self.trackedObjects[guid] = item

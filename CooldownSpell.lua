@@ -5,7 +5,7 @@ function CooldownSpell:new(cooldownId)
     local info = C_CooldownViewer.GetCooldownViewerCooldownInfo(cooldownId)
     local spell = C_Spell.GetSpellInfo(info.spellID)
     local charges = C_Spell.GetSpellCharges(info.spellID)
-
+    
     local new = {}
     new.id = spell.spellID
     new.name = spell.name

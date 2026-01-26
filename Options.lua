@@ -2,6 +2,7 @@ local _, env = ...
 
 NeebelCore.defaults = {
     profile = {
+        message = "Test",
     },
 }
 
@@ -29,11 +30,11 @@ NeebelCore.options = {
 }
 
 function NeebelCore:GetMessage(info)
-    return "Test"
+    return self.db.profile.message
 end
 
 function NeebelCore:SetMessage(info, msg)
-    print(msg)
+    self.db.profile.message = msg
 end
 
 
