@@ -24,10 +24,6 @@ function NeebelCore:OnInitialize()
     local playerLoc = PlayerLocation:CreateFromUnit("player")
     local _, _ , classId = C_PlayerInfo.GetClass(playerLoc)
     NeebelCore.classId = classId
-
-    local test = C_Spell.GetSpellIDForSpellIdentifier("Shadow Blades")
-    local test2 = C_UnitAuras.GetCooldownAuraBySpellID(test)
-    print(test, test2)
     
     local currentSpecIndex = GetSpecialization()
     if currentSpecIndex then
@@ -60,6 +56,7 @@ function NeebelCore:OnInitialize()
     self:BuildSpellLookup()
 
     self:RegisterEvent("SPELL_UPDATE_COOLDOWN", "UpdateCooldown")
+    self:RegisterEvent("SPELLS_CHANGED", "SpellChanged")
     self:RegisterEvent("SPELL_UPDATE_CHARGES", "UpdateCharges")
     self:RegisterEvent("UNIT_AURA", "UpdateAuras")
     self:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED", "SpecChanged")
@@ -75,6 +72,19 @@ function NeebelCore:OnInitialize()
         end
     end
 
+    self.db.profile.trackedObjects = self.db.profile.trackedObjects or {}
+    local shadowBlades = CreateTrackedSpell(121471)
+    local shadowDance = CreateTrackedSpell(185313)
+
+    if shadowBlades then
+        self.db.profile.trackedObjects[shadowBlades.guid] = shadowBlades
+    end
+
+    if shadowDance then
+        self.db.profile.trackedObjects[shadowDance.guid] = shadowDance
+    end
+
+    BuildModelGraph(self.db.profile.trackedObjects, self.db.profile.groups)
     Timer:ScheduleRepeatingTimer(OnUpdate, 0.2)
 end
 
@@ -83,8 +93,17 @@ function NeebelCore:UpdateCooldown(event, spellId, baseSpellID, category, startR
         return
     end
 
-    local id = spellId or baseSpellID
-    DirtyState["spellID"][id] = true
+    if spellId then
+        DirtyState["spellID"][spellId] = true
+    end
+
+    if baseSpellID then
+        DirtyState["spellID"][baseSpellID] = true
+    end
+end
+
+function NeebelCore:SpellChanged(event)
+    DirtyState["spells"] = true
 end
 
 function NeebelCore:UpdateCharges(event)
@@ -136,13 +155,4 @@ end
 
 function NeebelCore:OnDisable()
     -- Called when the addon is disabled
-end
-
--- https://gist.github.com/jrus/3197011
-function GenerateGUID()
-    local template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
-    return string.gsub(template, "[xy]", function (c)
-        local v = (c == "x") and random(0, 0xf) or random(8, 0xb)
-        return string.format("%x", v)
-    end)
 end

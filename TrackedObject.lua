@@ -3,12 +3,6 @@ TrackedObject.__index = TrackedObject
 
 local _, env = ...
 
-TrackedObjectTypes = {
-    Spell = 1,
-    Item = 2,
-    Aura = 3
-}
-
 function OnInit(frame)
     frame:SetScript("OnDragStart", function(self, button)
         self:StartMoving()
@@ -91,12 +85,6 @@ end
 function TrackedObject:Hide()
     self.frame:Hide()
 end
-
-CDTimerTypes = {
-    Charge = 1,
-    Cooldown = 2,
-    Aura = 3,
-}
 
 function TrackedObject:Update(DirtyStateContext)
     if(DirtyStateContext["spellID"][self.data.id] or (self.data.hasCharges and DirtyStateContext["charges"])) then

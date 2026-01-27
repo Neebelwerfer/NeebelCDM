@@ -25,8 +25,13 @@ Libs\AceSerializer-3.0\AceSerializer-3.0.xml
 Libs\LibSharedMedia-3.0\lib.xml
 Libs\LibEQOL\LibEQOL.xml
 
+Utils.lua
+Enums.lua
 Core.lua
+TrackedDataFactory.lua
 Options.lua
 CooldownSpell.lua
 Bars.lua
 TrackedObject.lua
+ModelBuilder.lua
+FrameBuilder.lua
