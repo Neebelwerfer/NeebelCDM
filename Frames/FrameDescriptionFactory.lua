@@ -1,30 +1,30 @@
-FrameFactory = {}
+FrameDescriptionFactory = {}
 
 ---@class ButtonAction
 ---@field type "spell" | "macro"
 ---@field value string
 
 ---@class IconProps
----@field Icon FlexiblePropDescriptor<string>
----@field ColorMask FlexiblePropDescriptor<Color>
+---@field icon FlexiblePropDescriptor<string>
+---@field colorMask FlexiblePropDescriptor<Color>
 
 ---@class IconButtonProps : IconProps
----@field Action FlexiblePropDescriptor<ButtonAction>
+---@field action FlexiblePropDescriptor<ButtonAction>
 
 ---@class BarProps
----@field Texture FlexiblePropDescriptor<string>
----@field Color FlexiblePropDescriptor<Color>
+---@field texture FlexiblePropDescriptor<string>
+---@field color FlexiblePropDescriptor<Color>
 
 ---@class TextProps
----@field Text FlexiblePropDescriptor<string>
----@field Color FlexiblePropDescriptor<Color>
+---@field text FlexiblePropDescriptor<string>
+---@field color FlexiblePropDescriptor<Color>
 
 ---@class CooldownProps
----@field Timer BoundPropDescriptor
----@field Swipe FlexiblePropDescriptor<boolean>
----@field Edge FlexiblePropDescriptor<boolean>
----@field Reverse FlexiblePropDescriptor<boolean>
----@field ColorMask FlexiblePropDescriptor<Color>
+---@field timer BoundPropDescriptor
+---@field swipe FlexiblePropDescriptor<boolean>
+---@field edge FlexiblePropDescriptor<boolean>
+---@field reverse FlexiblePropDescriptor<boolean>
+---@field colorMask FlexiblePropDescriptor<Color>
 
 ---@generic T
 ---@class StaticPropDescriptor<T>
@@ -50,6 +50,8 @@ FrameFactory = {}
 ---@field type Frame.FrameTypes
 ---@field name string
 ---@field props TProps
+---@field layout Layout
+---@field transform {offsetX: number, offsetY: number, scale: number}
 ---@field visibility? RuleBindingDescriptor | RuleComposite
 ---@field strata? "BACKGROUND" | "LOW" | "MEDIUM" | "HIGH" | "DIALOG" | "FULLSCREEN" | "FULLSCREEN_DIALOG" | "TOOLTIP"
 ---@field frameLevel? number
@@ -63,6 +65,26 @@ FrameTypes = {
     IconButton = 5,
     TextButton = 6
 }
+
+---Default layout
+---@return Layout
+local function DefaultLayout()
+    return {
+        size = { width = 32, height = 32 },
+        padding = { left = 0, right = 0, top = 0, bottom = 0 },
+        dynamic = { enabled = false, direction = "DOWN", spacing = 0, collapse = false }
+    }
+end
+
+---Default transform
+---@return Transform
+local function DefaultTransform()
+    return {
+            offsetX = 0,
+            offsetY = 0,
+            scale = 1
+    }
+end
 
 -- Helpers for creating props
 ---@return FlexiblePropDescriptor
@@ -96,66 +118,74 @@ local function StaticProp(valueType, defaultValue)
 end
 
 ---@return FrameDescriptor<IconProps>
-function FrameFactory.CreateIconFrame()
+function FrameDescriptionFactory.CreateIconFrame()
     return {
         type = FrameTypes.Icon,
         name = "Icon",
         props = {
-            Icon = FlexibleProp("string", "Interface\\Icons\\INV_Misc_QuestionMark"),
-            ColorMask = FlexibleProp("Color", Color(1, 1, 1, 1))
+            icon = FlexibleProp("string", "Interface\\Icons\\INV_Misc_QuestionMark"),
+            colorMask = FlexibleProp("Color", Color(1, 1, 1, 1))
         },
+        layout = DefaultLayout(),
+        transform = DefaultTransform()
     }
 end
 
 ---@return FrameDescriptor<BarProps>
-function FrameFactory.CreateBarFrame()
+function FrameDescriptionFactory.CreateBarFrame()
     return {
         type = FrameTypes.Bar,
         name = "Bar",
         props = {
-            Texture = FlexibleProp("string", "Interface\\TargetingFrame\\UI-StatusBar"),
-            Color = FlexibleProp("Color", Color(1, 1, 1, 1))
+            texture = FlexibleProp("string", "Interface\\TargetingFrame\\UI-StatusBar"),
+            color = FlexibleProp("Color", Color(1, 1, 1, 1))
         },
+        layout = DefaultLayout(),
+        transform = DefaultTransform()
     }
 end
 
 ---@return FrameDescriptor<TextProps>
-function FrameFactory.CreateTextFrame()
+function FrameDescriptionFactory.CreateTextFrame()
     return {
         type = FrameTypes.Text,
         name = "Text",
         props = {
-            Text = FlexibleProp("string", "Text"),
-            Color = FlexibleProp("Color", Color(1, 1, 1, 1))
-        }
+            text = FlexibleProp("string", "Text"),
+            color = FlexibleProp("Color", Color(1, 1, 1, 1))
+        },
+        layout = DefaultLayout(),
+        transform = DefaultTransform()
     }
 end
 
 ---@return FrameDescriptor<CooldownProps>
-function FrameFactory.CreateCooldownFrame()
+function FrameDescriptionFactory.CreateCooldownFrame()
     return {
         type = FrameTypes.Cooldown,
         name = "Cooldown",
         props = {
-            Timer = BoundProp("number", nil),
-            Swipe = FlexibleProp("boolean", true),
-            Edge = FlexibleProp("boolean", false),
-            Reverse = FlexibleProp("boolean", false),
-            ColorMask = FlexibleProp("Color", Color(1, 1, 1, 1))
-        }
+            timer = BoundProp("number", nil),
+            swipe = FlexibleProp("boolean", true),
+            edge = FlexibleProp("boolean", false),
+            reverse = FlexibleProp("boolean", false),
+            colorMask = FlexibleProp("Color", Color(1, 1, 1, 1))
+        },
+        layout = DefaultLayout(),
+        transform = DefaultTransform()
     }
 end
 
 local frameCreators = {
-    [FrameTypes.Icon] = FrameFactory.CreateIconFrame,
-    [FrameTypes.Bar] = FrameFactory.CreateBarFrame,
-    [FrameTypes.Text] = FrameFactory.CreateTextFrame,
-    [FrameTypes.Cooldown] = FrameFactory.CreateCooldownFrame
+    [FrameTypes.Icon] = FrameDescriptionFactory.CreateIconFrame,
+    [FrameTypes.Bar] = FrameDescriptionFactory.CreateBarFrame,
+    [FrameTypes.Text] = FrameDescriptionFactory.CreateTextFrame,
+    [FrameTypes.Cooldown] = FrameDescriptionFactory.CreateCooldownFrame
 }
 
 ---@param type Frame.FrameTypes
 ---@return FrameDescriptor?
-function FrameFactory.GetFrameOfType(type)
+function FrameDescriptionFactory.GetFrameOfType(type)
     if type then
         return frameCreators[type]()
     end

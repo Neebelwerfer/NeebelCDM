@@ -24,6 +24,11 @@ Node.NodeTypes = {
     DynamicGroup = 255 -- Used for dynamic positioning of children
 }
 
+---@class Layout
+---@field size { width: number, height: number }
+---@field padding { left: number, right: number, top: number, bottom: number }
+---@field dynamic { enabled: boolean, direction: GroupGrowDirection, spacing: number, collapse: boolean }
+
 ---@class Transform
 ---@field point string
 ---@field relativePoint? string
@@ -46,7 +51,7 @@ Node.NodeTypes = {
 ---@field frames FrameDescriptor[]
 ---@field bindings BindingDescriptor[]
 ---@field states StateDescriptor[]  -- Evaluated in order, first match wins
----@field layout table
+---@field layout Layout
 ---@field options table
 ---@field loadRules table
 ---@field isDirty boolean

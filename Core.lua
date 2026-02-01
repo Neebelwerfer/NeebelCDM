@@ -54,6 +54,43 @@ function NeebelCore:OnInitialize()
 
     self:BuildSpellLookup()
 
+    local testNode = NodeFactory.CreateIcon()
+    testNode.guid = "test-icon-001"
+    testNode.layout.size.width = 64
+    testNode.layout.size.height = 64
+    testNode.transform.point = "CENTER"
+    testNode.transform.offsetX = 0
+    testNode.transform.offsetY = 0
+
+    -- Add an icon frame descriptor (if not already there by default)
+    local iconDescriptor = FrameDescriptionFactory.CreateIconFrame()
+    iconDescriptor.props.icon.value = "Interface\\Icons\\Ability_Warrior_Revenge"
+    iconDescriptor.layout.size = { width = 64, height = 64 }
+
+
+    local textDescriptor = FrameDescriptionFactory.CreateTextFrame()
+    textDescriptor.props.text.value = "Test"
+    textDescriptor.transform.offsetX = 10
+
+    local cooldownDescriptor = FrameDescriptionFactory.CreateCooldownFrame()
+    
+    
+    local barDescriptor = FrameDescriptionFactory.CreateBarFrame()
+    barDescriptor.transform.offsetX = 0
+    barDescriptor.transform.offsetY = 0
+    barDescriptor.layout.size = { width = 256, height = 32 }
+
+    testNode.frames = {
+        iconDescriptor,
+        textDescriptor,
+        cooldownDescriptor,
+        barDescriptor
+    }
+
+    RuntimeNodeManager:BuildAll({[testNode.guid] = testNode})
+    self.trackedObjects[testNode.guid] = testNode
+
+
     self:RegisterEvent("SPELL_UPDATE_COOLDOWN", "UpdateCooldown")
     self:RegisterEvent("SPELLS_CHANGED", "SpellChanged")
     self:RegisterEvent("SPELL_UPDATE_CHARGES", "UpdateCharges")

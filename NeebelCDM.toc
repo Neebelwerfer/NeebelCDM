@@ -31,10 +31,11 @@ Conditions.lua
 Nodes/NodeUtility.lua
 Nodes/Node.lua
 Nodes/NodeFactory.lua
+Nodes/RuntimeNode.lua
+Nodes/RuntimeNodeManager.lua
+Frames/FrameDescriptionFactory.lua
+Frames/FrameBuilder.lua
+Core.lua
 Bindings.lua
-FrameFactory.lua
 Options.lua
 CooldownSpell.lua
-Bars.lua
-TrackedObject.lua
-Core.lua

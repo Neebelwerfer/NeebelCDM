@@ -18,9 +18,9 @@ function NodeFactory.CreateIcon()
     return Node:New({
         name = "Icon",
         frames = {
-            FrameFactory.CreateIconFrame(),
-            FrameFactory.CreateCooldownFrame(),
-            FrameFactory.CreateTextFrame()
+            FrameDescriptionFactory.CreateIconFrame(),
+            FrameDescriptionFactory.CreateCooldownFrame(),
+            FrameDescriptionFactory.CreateTextFrame()
         },
         layout = {
             size = { width = 36, height = 36 },
@@ -41,7 +41,7 @@ function NodeFactory.CreateBar()
     return Node:New({
         name = "Bar",
         frames = {
-            FrameFactory.CreateBarFrame()
+            FrameDescriptionFactory.CreateBarFrame()
         },
         layout = {
             size = { width = 200, height = 20 },
@@ -62,7 +62,7 @@ function NodeFactory.CreateText()
     return Node:New({
         name = "Text",
         frames = {
-            FrameFactory.CreateTextFrame()
+            FrameDescriptionFactory.CreateTextFrame()
         },
         layout = {
             size = { width = 100, height = 20 },
@@ -121,7 +121,7 @@ function NodeFactory.CreateIconButton()
     return Node:New({
         name = "Icon Button",
         frames = {
-            FrameFactory.CreateIconFrame()
+            FrameDescriptionFactory.CreateIconFrame()
             -- Would need IconButton frame type with action support
         },
         layout = {
@@ -143,7 +143,7 @@ function NodeFactory.CreateTextButton()
     return Node:New({
         name = "Text Button",
         frames = {
-            FrameFactory.CreateTextFrame()
+            FrameDescriptionFactory.CreateTextFrame()
             -- Would need TextButton frame type with action support
         },
         layout = {
