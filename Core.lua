@@ -56,40 +56,56 @@ function NeebelCore:OnInitialize()
 
     local testNode = NodeFactory.CreateIcon()
     testNode.guid = "test-icon-001"
-    testNode.layout.size.width = 64
-    testNode.layout.size.height = 64
+    testNode.layout.size.width = 48
+    testNode.layout.size.height = 48
     testNode.transform.point = "CENTER"
     testNode.transform.offsetX = 0
     testNode.transform.offsetY = 0
 
     -- Add an icon frame descriptor (if not already there by default)
     local iconDescriptor = FrameDescriptionFactory.CreateIconFrame()
-    iconDescriptor.props.icon.value = "Interface\\Icons\\Ability_Warrior_Revenge"
-    iconDescriptor.layout.size = { width = 64, height = 64 }
-
+    iconDescriptor.props.icon.resolveType = "binding"
+    iconDescriptor.props.icon.value = {binding = "Test Spell", field = "icon"}
 
     local textDescriptor = FrameDescriptionFactory.CreateTextFrame()
-    textDescriptor.props.text.value = "Test"
-    textDescriptor.transform.offsetX = 10
+    textDescriptor.props.text.resolveType = "binding"
+    textDescriptor.props.text.value = {binding = "Test Spell", field = "charges.current"}
+    textDescriptor.transform.offsetX = 13
+    textDescriptor.transform.offsetY = -13
+    textDescriptor.props.fontSize.value = 15
+
+    local chargeCooldown = FrameDescriptionFactory.CreateCooldownFrame()
+    chargeCooldown.props.cooldown.resolveType = "binding"
+    chargeCooldown.props.cooldown.value = {binding = "Test Spell", field = "charges.cooldown"}
+    chargeCooldown.props.swipe.value = false
+    chargeCooldown.props.edge.value = true
+    chargeCooldown.props.reverse.value = true
+    chargeCooldown.props.hideCountdown.value = true
 
     local cooldownDescriptor = FrameDescriptionFactory.CreateCooldownFrame()
-    
-    
-    local barDescriptor = FrameDescriptionFactory.CreateBarFrame()
-    barDescriptor.transform.offsetX = 0
-    barDescriptor.transform.offsetY = 0
-    barDescriptor.layout.size = { width = 256, height = 32 }
+    cooldownDescriptor.props.cooldown.resolveType = "binding"
+    cooldownDescriptor.props.cooldown.value = {binding = "Test Spell", field = "cooldown"}
+    cooldownDescriptor.props.swipe.value = true
+    cooldownDescriptor.props.edge.value = false
+    cooldownDescriptor.props.colorMask.value = Color(1, 0, 0, 1)
 
     testNode.frames = {
         iconDescriptor,
         textDescriptor,
+        chargeCooldown,
         cooldownDescriptor,
-        barDescriptor
+    }
+
+    testNode.bindings = {
+        {
+            type = DataTypes.Spell,
+            alias = "Test Spell",
+            key = 185313
+        }
     }
 
     RuntimeNodeManager:BuildAll({[testNode.guid] = testNode})
     self.trackedObjects[testNode.guid] = testNode
-
 
     self:RegisterEvent("SPELL_UPDATE_COOLDOWN", "UpdateCooldown")
     self:RegisterEvent("SPELLS_CHANGED", "SpellChanged")

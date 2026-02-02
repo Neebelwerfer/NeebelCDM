@@ -35,6 +35,7 @@ Nodes/RuntimeNode.lua
 Nodes/RuntimeNodeManager.lua
 Frames/FrameDescriptionFactory.lua
 Frames/FrameBuilder.lua
+DataContext.lua
 Core.lua
 Bindings.lua
 Options.lua

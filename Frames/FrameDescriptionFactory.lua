@@ -18,9 +18,11 @@ FrameDescriptionFactory = {}
 ---@class TextProps
 ---@field text FlexiblePropDescriptor<string>
 ---@field color FlexiblePropDescriptor<Color>
+---@field fontSize FlexiblePropDescriptor<number>
 
 ---@class CooldownProps
----@field timer BoundPropDescriptor
+---@field cooldown BoundPropDescriptor
+---@field hideCountdown FlexiblePropDescriptor<boolean>
 ---@field swipe FlexiblePropDescriptor<boolean>
 ---@field edge FlexiblePropDescriptor<boolean>
 ---@field reverse FlexiblePropDescriptor<boolean>
@@ -50,7 +52,6 @@ FrameDescriptionFactory = {}
 ---@field type Frame.FrameTypes
 ---@field name string
 ---@field props TProps
----@field layout Layout
 ---@field transform {offsetX: number, offsetY: number, scale: number}
 ---@field visibility? RuleBindingDescriptor | RuleComposite
 ---@field strata? "BACKGROUND" | "LOW" | "MEDIUM" | "HIGH" | "DIALOG" | "FULLSCREEN" | "FULLSCREEN_DIALOG" | "TOOLTIP"
@@ -65,16 +66,6 @@ FrameTypes = {
     IconButton = 5,
     TextButton = 6
 }
-
----Default layout
----@return Layout
-local function DefaultLayout()
-    return {
-        size = { width = 32, height = 32 },
-        padding = { left = 0, right = 0, top = 0, bottom = 0 },
-        dynamic = { enabled = false, direction = "DOWN", spacing = 0, collapse = false }
-    }
-end
 
 ---Default transform
 ---@return Transform
@@ -126,7 +117,6 @@ function FrameDescriptionFactory.CreateIconFrame()
             icon = FlexibleProp("string", "Interface\\Icons\\INV_Misc_QuestionMark"),
             colorMask = FlexibleProp("Color", Color(1, 1, 1, 1))
         },
-        layout = DefaultLayout(),
         transform = DefaultTransform()
     }
 end
@@ -140,7 +130,6 @@ function FrameDescriptionFactory.CreateBarFrame()
             texture = FlexibleProp("string", "Interface\\TargetingFrame\\UI-StatusBar"),
             color = FlexibleProp("Color", Color(1, 1, 1, 1))
         },
-        layout = DefaultLayout(),
         transform = DefaultTransform()
     }
 end
@@ -152,9 +141,9 @@ function FrameDescriptionFactory.CreateTextFrame()
         name = "Text",
         props = {
             text = FlexibleProp("string", "Text"),
-            color = FlexibleProp("Color", Color(1, 1, 1, 1))
+            color = FlexibleProp("Color", Color(1, 1, 1, 1)),
+            fontSize = FlexibleProp("number", 12)
         },
-        layout = DefaultLayout(),
         transform = DefaultTransform()
     }
 end
@@ -165,13 +154,13 @@ function FrameDescriptionFactory.CreateCooldownFrame()
         type = FrameTypes.Cooldown,
         name = "Cooldown",
         props = {
-            timer = BoundProp("number", nil),
+            cooldown = BoundProp("cooldown", nil),
+            hideCountdown = FlexibleProp("boolean", false),
             swipe = FlexibleProp("boolean", true),
             edge = FlexibleProp("boolean", false),
             reverse = FlexibleProp("boolean", false),
             colorMask = FlexibleProp("Color", Color(1, 1, 1, 1))
         },
-        layout = DefaultLayout(),
         transform = DefaultTransform()
     }
 end
