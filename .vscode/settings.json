@@ -72,6 +72,7 @@
         "AddonList",
         "DropDownList1",
         "RAID_CLASS_COLORS",
-        "BuffIconCooldownViewer"
+        "BuffIconCooldownViewer",
+        "BuffBarCooldownViewer"
     ]
 }

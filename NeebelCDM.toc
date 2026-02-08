@@ -43,6 +43,7 @@ Data/ResourceContext.lua
 Data/ItemContext.lua
 Data/UnitContext.lua
 Data/DataContext.lua
+Data/CooldownViewerIntegration.lua
 Core.lua
 Bindings.lua
 Options.lua

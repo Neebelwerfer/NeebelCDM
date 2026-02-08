@@ -66,6 +66,9 @@ function NeebelCore:OnInitialize()
     local textDescriptor = FrameDescriptionFactory.CreateTextFrame()
     textDescriptor.props.text.resolveType = "binding"
     textDescriptor.props.text.value = {binding = "Test Aura", field = "stacks"}
+    textDescriptor.transform.offsetX = 13
+    textDescriptor.transform.offsetY = -13
+    textDescriptor.props.fontSize.value = 15
 
     local stackCooldown = PropertyFactory.DefaultCooldownProperties()
     stackCooldown.cooldown.resolveType = "binding"
@@ -151,10 +154,6 @@ end
 function NeebelCore:UpdateCooldown(event, spellId, baseSpellID, category, startRecoveryCategory)
     if spellId == nil and baseSpellID == nil then
         return
-    end
-
-    if spellId == 196912 or baseSpellID == 196912 then
-        print("test")
     end
 
     if spellId then
