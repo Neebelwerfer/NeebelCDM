@@ -1,4 +1,4 @@
-NeebelCore = LibStub("AceAddon-3.0"):NewAddon("NeebelCDM", "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0", "AceSerializer-3.0")
+ModularCore = LibStub("AceAddon-3.0"):NewAddon("ModularCDM", "AceConsole-3.0", "AceEvent-3.0", "AceTimer-3.0", "AceSerializer-3.0")
 local addonName, env = ...
 local AC = LibStub("AceConfig-3.0")
 local ACD = LibStub("AceConfigDialog-3.0")
@@ -18,35 +18,35 @@ env.baseSize = 46
 
 local DirtyState = {spellID = {}, auraID = {}}
 
-function NeebelCore:OnInitialize()
+function ModularCore:OnInitialize()
 	-- Called when the addon is loaded
     local playerLoc = PlayerLocation:CreateFromUnit("player")
     local _, _ , classId = C_PlayerInfo.GetClass(playerLoc)
-    NeebelCore.classId = classId
+    ModularCore.classId = classId
     
     local currentSpecIndex = GetSpecialization()
     if currentSpecIndex then
-        local id, currentSpecName =  GetSpecializationInfoForClassID(NeebelCore.classId, currentSpecIndex)
-        NeebelCore.specId = id
-        NeebelCore.specName = currentSpecName
+        local id, currentSpecName =  GetSpecializationInfoForClassID(ModularCore.classId, currentSpecIndex)
+        ModularCore.specId = id
+        ModularCore.specName = currentSpecName
     else
         return
     end
     
     
-	self.db = LibStub("AceDB-3.0"):New("NeebelCDM_DB", self.defaults, true)
+	self.db = LibStub("AceDB-3.0"):New("ModularCDM_DB", self.defaults, true)
     self.mainFrame = CreateFrame("Frame", addonName, UIParent)
 
     self.options.args.profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
     self.options.args.profiles.order = 999
     
-	AC:RegisterOptionsTable("NeebelCDM_Options", self.options)
-	self.optionsFrame = ACD:AddToBlizOptions("NeebelCDM_Options", "NeebelCDM")
+	AC:RegisterOptionsTable("ModularCDM_Options", self.options)
+	self.optionsFrame = ACD:AddToBlizOptions("ModularCDM_Options", "ModularCDM")
 	local profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
-	AC:RegisterOptionsTable("NeebelCDM_Profiles", profiles)
-	ACD:AddToBlizOptions("NeebelCDM_Profiles", "Profiles", "NeebelCDM")
+	AC:RegisterOptionsTable("ModularCDM_Profiles", profiles)
+	ACD:AddToBlizOptions("ModularCDM_Profiles", "Profiles", "ModularCDM")
 
-    self:RegisterChatCommand("neebelcdm", "SlashCommand")
+    self:RegisterChatCommand("ModularCDM", "SlashCommand")
     self:RegisterChatCommand("ncdm", "SlashCommand")
 
     self:BuildSpellLookup()
@@ -83,7 +83,7 @@ function NeebelCore:OnInitialize()
         {
             type = DataTypes.Aura,
             alias = "Test Aura",
-            key = 457052,
+            key = 196912,
         }
     }
 
@@ -144,16 +144,14 @@ function NeebelCore:OnInitialize()
     }
 
     RuntimeNodeManager:BuildAll({[shadowDanceNode.guid] = shadowDanceNode, [premeditationNode.guid] = premeditationNode})
-    self:ScheduleRepeatingTimer("Update", 0.5)
+    self:ScheduleRepeatingTimer("Update", 0.2)
 
-    self:RegisterEvent("UNIT_AURA", "UpdateAuras")
-    self:RegisterEvent("SPELL_UPDATE_COOLDOWN", "UpdateCooldown")
-
-    CooldownViewerIntegration:Initialize()
+    -- self:RegisterEvent("SPELL_UPDATE_COOLDOWN", "UpdateCooldown")
+    DataContext.Initialize()
 end
 
 
-function NeebelCore:UpdateCooldown(event, spellId, baseSpellID, category, startRecoveryCategory)
+function ModularCore:UpdateCooldown(event, spellId, baseSpellID, category, startRecoveryCategory)
     if spellId == nil and baseSpellID == nil then
         return
     end
@@ -167,80 +165,34 @@ function NeebelCore:UpdateCooldown(event, spellId, baseSpellID, category, startR
     end
 end
 
-function NeebelCore:SpellChanged(event)
+function ModularCore:SpellChanged(event)
     DirtyState["spells"] = true
 end
 
-function NeebelCore:UpdateCharges(event)
+function ModularCore:UpdateCharges(event)
     DirtyState["charges"] = true
 end
 
-TableTest = {}
----comment
----@param event any
----@param unit any
----@param info UnitAuraUpdateInfo
-function NeebelCore:UpdateAuras(event, unit, info)
-	-- if info.isFullUpdate then
-	-- 	print("full update") -- loop over all auras, etc
-    --     for i = 1, 40 do
-    --         local data = C_UnitAuras.GetAuraDataBySlot(unit, i)
-    --         if data then
-    --             print(data.name, issecretvalue(data.spellID), issecretvalue(data.auraInstanceID))
-    --         end
-    --     end
-	-- 	return
-	-- end
-	-- if info.addedAuras then
-	-- 	local t = ""
-	-- 	for _, v in pairs(info.addedAuras) do
-    --         t = t .. format("%d(%s)", v.auraInstanceID, v.name)
-    --         print(v.name, issecretvalue(v.spellId), v.spellId)
-	-- 	end
-	-- 	print(unit, "|cnGREEN_FONT_COLOR:added|r", t)
-	-- end
-	-- if info.updatedAuraInstanceIDs then
-	-- 	local t = ""
-	-- 	for _, v in pairs(info.updatedAuraInstanceIDs) do
-	-- 		local aura = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, v)
-    --         TableTest[aura.spellId] = aura
-    --         t = t .. format("%d(%s)", v, aura.name)
-	-- 	end
-	-- 	print(unit, "|cnYELLOW_FONT_COLOR:updated|r", t)
-	-- end
-	-- if info.removedAuraInstanceIDs then
-	-- 	local t = ""
-	-- 	for _, v in pairs(info.removedAuraInstanceIDs) do
-	-- 		t = t .. format("%d", v)
-	-- 	end
-	-- 	print(unit, "|cnRED_FONT_COLOR:removed|r", t)
-	-- end
-
-    -- if TableTest[196912] then
-    --     print("test")
-    -- end
-end
-
-function NeebelCore:SlashCommand()
-    if ACD.OpenFrames["NeebelCDM_Options"] then
-        ACD:Close("NeebelCDM_Options")
+function ModularCore:SlashCommand()
+    if ACD.OpenFrames["ModularCDM_Options"] then
+        ACD:Close("ModularCDM_Options")
     else
-        ACD:Open("NeebelCDM_Options")
+        ACD:Open("ModularCDM_Options")
     end
 end
 
-function NeebelCore:SpecChanged()
+function ModularCore:SpecChanged()
     self:BuildSpellLookup()
 end
 
-function NeebelCore:Update()
+function ModularCore:Update()
     DataContext.UpdateContext()
 
     RuntimeNodeManager:UpdateNodes()
 end
 
 
-function NeebelCore:BuildSpellLookup()
+function ModularCore:BuildSpellLookup()
     local spells = {}
     for i, v in ipairs(env.CdManagerCategories) do
         local categorySet = C_CooldownViewer.GetCooldownViewerCategorySet(v, true)
@@ -254,10 +206,10 @@ function NeebelCore:BuildSpellLookup()
     env.spellLookup = spells
 end
 
-function NeebelCore:OnEnable()
+function ModularCore:OnEnable()
     -- Called when the addon is enabled
 end
 
-function NeebelCore:OnDisable()
+function ModularCore:OnDisable()
     -- Called when the addon is disabled
 end

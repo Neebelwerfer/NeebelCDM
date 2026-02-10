@@ -48,15 +48,20 @@ DataContext = {
     lastUpdate = 0
 }
 
-local contextCreators = {
+local contextRegistors = {
     [DataTypes.Spell] = SpellContext.Create,
-    [DataTypes.Aura] = AuraContextManager.AddContext,
+    [DataTypes.Aura] = AuraContextManager.Register,
 }
+
+function DataContext.Initialize()
+    AuraContextManager.Initialize()
+end
 
 ---Register a binding from a node
 ---@param sourceGuid string
 ---@param binding BindingDescriptor
 function DataContext.RegisterBinding(sourceGuid, binding)
+
     local path = tostring(binding.type) .. ":" .. binding.key
 
     if DataContext.bindings[path] then -- Binding already exists
@@ -72,7 +77,12 @@ function DataContext.RegisterBinding(sourceGuid, binding)
         if not DataContext.context[binding.type] then
             DataContext.context[binding.type] = {}
         end
-        DataContext.context[binding.type][binding.key] = contextCreators[binding.type](binding.key)
+        
+        if binding.type == DataTypes.Aura then
+            AuraContextManager.Register(binding.key)
+        else
+            DataContext.context[binding.type][binding.key] = contextRegistors[binding.type](binding.key)
+        end
     end
 end
 
@@ -108,6 +118,9 @@ end
 ---@param field string
 ---@return any?
 function DataContext.ResolveBinding(type, key, field)
+    if type == DataTypes.Aura then
+        return DataContext.HandleNestedFields(AuraContextManager.contexts[key], field)
+    end
     return DataContext.HandleNestedFields(DataContext.context[type][key], field) or nil
 end
 
@@ -130,8 +143,9 @@ function DataContext.UpdateContext()
     for typeName, type in pairs(DataTypes) do
         if DataContext.context[type] then
             for key, _ in pairs(DataContext.context[type]) do
-                DataContext.context[type][key] = contextCreators[type](key)
+                DataContext.context[type][key] = contextRegistors[type](key)
             end
         end
+        
     end
 end

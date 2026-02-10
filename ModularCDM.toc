@@ -1,9 +1,9 @@
 ## Interface: 120000, 120001
 ## Version: 0.0.1
-## Title: NeebelCDM
+## Title: ModularCDM
 ## Notes: Cooldown manager improvements
 ## Author: Neebelwerfer
-## SavedVariables: NeebelCDM_DB
+## SavedVariables: ModularCDM_DB
 ## OptionalDeps: Ace3
 
 Libs\LibStub\LibStub.lua
@@ -43,7 +43,6 @@ Data/ResourceContext.lua
 Data/ItemContext.lua
 Data/UnitContext.lua
 Data/DataContext.lua
-Data/CooldownViewerIntegration.lua
 Core.lua
 Bindings.lua
 Options.lua

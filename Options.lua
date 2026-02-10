@@ -1,14 +1,14 @@
 local _, env = ...
 
-NeebelCore.defaults = {
+ModularCore.defaults = {
     profile = {
         message = "Test",
     },
 }
 
-NeebelCore.options = { 
+ModularCore.options = { 
 	name = "NeebelCDM",
-	handler = NeebelCore,
+	handler = ModularCore,
 	type = "group",
 	args = {
         general= {
@@ -29,19 +29,19 @@ NeebelCore.options = {
 	},
 }
 
-function NeebelCore:GetMessage(info)
+function ModularCore:GetMessage(info)
     return self.db.profile.message
 end
 
-function NeebelCore:SetMessage(info, msg)
+function ModularCore:SetMessage(info, msg)
     self.db.profile.message = msg
 end
 
 
-function NeebelCore:GetValue(info)
+function ModularCore:GetValue(info)
 	return self.db.profile[info[#info]]
 end
 
-function NeebelCore:SetValue(info, value)
+function ModularCore:SetValue(info, value)
 	self.db.profile[info[#info]] = value
 end
