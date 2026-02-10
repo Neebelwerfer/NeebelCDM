@@ -4,9 +4,10 @@ Since the only way we can couple SpellID with auraInstanceID is through said fra
 ]]
 AuraContextManager = {
     contexts = {}, -- context registry
+    contextSubscriptions = {}, -- { [key] = { [guid] = true } }
+    
     auraIDToFrame = {}, -- auraInstanceID -> frame
     frameToContext = {}, -- frame -> context
-
     initialized = false
 }
 
@@ -32,14 +33,26 @@ end
 -- Registers a new context to the manager
 -- TODO: Handle the case where the context is already registered, and since we use names we should look what we do between handling SpellID vs Spell names; an aura could have multiple spellIDs connected!!!
 function AuraContextManager.Register(sourceGuid, key)
-    local context = AuraContext:new(key)
-    AuraContextManager.contexts[key] = context
-    return context
+    -- If the context doesn't exist, create it
+    if not AuraContextManager.contextSubscriptions[key] then
+        AuraContextManager.contextSubscriptions[key] = {}
+        local context = AuraContext:new(key)
+        AuraContextManager.contexts[key] = context
+    end
+    
+    assert(not AuraContextManager.contextSubscriptions[key][sourceGuid], "Registering an already registered context")
+    AuraContextManager.contextSubscriptions[key][sourceGuid] = true
 end
 
 -- Unregisters a context
 function AuraContextManager.Unregister(sourceGuid, key)
-    AuraContextManager.contexts[key] = nil
+    assert(AuraContextManager.contextSubscriptions[key][sourceGuid], "Unregistering an unregistered context")
+    AuraContextManager.contextSubscriptions[key][sourceGuid] = nil
+
+    if not next(AuraContextManager.contextSubscriptions[key]) then
+        AuraContextManager.contextSubscriptions[key] = nil
+        AuraContextManager.contexts[key] = nil
+    end
 end
 
 -- Retrieves a context
@@ -59,7 +72,9 @@ end
 
 -- Rebuild the contexts from scratch (Might not be needed now)
 function AuraContextManager.Rebuild()
-    assert(not InCombatLockdown(), "Cannot rebuild while in combat") -- Maybe should just return instead of throwing an error
+    if InCombatLockdown() then
+        return
+    end
     
     for key, _ in pairs(AuraContextManager.contexts) do
         local new = AuraContext:new(key)
@@ -71,7 +86,9 @@ end
 
 -- Builds the connection between frames and contexts
 function AuraContextManager.ConnectFramesToContexts()
-    assert(not InCombatLockdown(), "Cannot rebuild connections while in combat") -- Maybe should just return instead of throwing an error
+    if InCombatLockdown() then
+        return
+    end
 
     local map = {}
     for _,k in ipairs(BuffIconCooldownViewer:GetLayoutChildren()) do

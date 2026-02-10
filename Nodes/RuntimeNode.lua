@@ -28,23 +28,24 @@ function RuntimeNode:new(node, parentRuntimeNode)
     
     -- Determine parent frame
     local parentFrame = parentRuntimeNode and parentRuntimeNode.rootFrame or UIParent
-
-    -- Build root frame
-    self.rootFrame = FrameBuilder.BuildRootFrame(node, parentFrame)
     
-    -- Build all child frames from descriptors
+    -- Get all the resolved props 
+    -- TODO: Re-think this loop?
+    local resolvedPropsPerFrame = {}
     for _, frameDescriptor in ipairs(node.frames) do
         local resolvedProps = self:ResolvePropsForFrame(frameDescriptor)
-        local frame = FrameBuilder.BuildFrameFromDescriptor(node, self.rootFrame, frameDescriptor, resolvedProps)
-        self.frames[frameDescriptor.name] = {frame = frame, descriptor = frameDescriptor}
+        resolvedPropsPerFrame[frameDescriptor.name] = resolvedProps
     end
+
+    -- Build root frame and all child frames
+    self.rootFrame = FrameBuilder.BuildRootFrame(node, parentFrame, resolvedPropsPerFrame)
 
     return self
 end
 
 
 function RuntimeNode:Update()
-    for _, frameContext in pairs(self.frames) do
+    for _, frameContext in pairs(self.rootFrame.frames) do
         self:UpdateFrame(frameContext.frame, frameContext.descriptor)
     end
 

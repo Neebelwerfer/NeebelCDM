@@ -5,10 +5,12 @@ function FrameBuilder.GenerateFrameName(guid, frameName)
     return appName .. ":" .. guid .. "-" .. frameName
 end
 
+
 ---@param node Node
 ---@param parentFrame Frame
+---@param resolvedFrameProps table<string, table<string, any>>
 ---@return Frame
-function FrameBuilder.BuildRootFrame(node, parentFrame)
+function FrameBuilder.BuildRootFrame(node, parentFrame, resolvedFrameProps)
     local name = FrameBuilder.GenerateFrameName(node.guid, "Root")
     local root = CreateFrame("Frame", name, parentFrame)
 
@@ -27,6 +29,13 @@ function FrameBuilder.BuildRootFrame(node, parentFrame)
     end)
     root:SetMovable(true)
     root:EnableMouse(false)
+
+    root.frames = {}
+
+    for _, frameDescriptor in pairs(node.frames) do
+        local frame = FrameBuilder.BuildFrameFromDescriptor(node, root, frameDescriptor, resolvedFrameProps[frameDescriptor.name])
+        root.frames[frameDescriptor.name] = {frame = frame, descriptor = frameDescriptor}
+    end
 
     return root
 end

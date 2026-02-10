@@ -1,8 +1,8 @@
 SpellContextManager = {
     contexts = {}, -- context registry
-    initialized = false,
+    contextSubscriptions = {}, -- { [key] = { [guid] = true } }
 
-    subscribers = {} -- { [key] = { [guid] = true } }
+    initialized = false,
 }
 
 function SpellContextManager.Initialize()
@@ -14,14 +14,26 @@ end
 
 -- Registers a new context to the manager
 function SpellContextManager.Register(sourceGuid, key)
-    local context = SpellContext:new(key)
-    SpellContextManager.contexts[key] = context
-    return context
+    -- If the context doesn't exist, create it
+    if not SpellContextManager.contextSubscriptions[key] then
+        SpellContextManager.contextSubscriptions[key] = {}
+        local context = SpellContext:new(key)
+        SpellContextManager.contexts[key] = context
+    end
+    
+    assert(not SpellContextManager.contextSubscriptions[key][sourceGuid], "Registering an already registered context")
+    SpellContextManager.contextSubscriptions[key][sourceGuid] = true
 end
 
 -- Unregisters a context
 function SpellContextManager.Unregister(sourceGuid, key)
-    SpellContextManager.contexts[key] = nil
+    assert(SpellContextManager.contextSubscriptions[key][sourceGuid], "Unregistering an unregistered context")
+    SpellContextManager.contextSubscriptions[key][sourceGuid] = nil
+
+    if not next(SpellContextManager.contextSubscriptions[key]) then
+        SpellContextManager.contextSubscriptions[key] = nil
+        SpellContextManager.contexts[key] = nil
+    end
 end
 
 -- Retrieves a context
@@ -35,12 +47,6 @@ function SpellContextManager.Update()
         context:Update()
     end
 end
-
-
-
-
-
-
 
 ---@class SpellContext
 ---@field id number
