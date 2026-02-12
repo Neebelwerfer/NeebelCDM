@@ -20,18 +20,18 @@ local DirtyState = {spellID = {}, auraID = {}}
 
 function ModularCore:OnInitialize()
 	-- Called when the addon is loaded
-    local playerLoc = PlayerLocation:CreateFromUnit("player")
-    local _, _ , classId = C_PlayerInfo.GetClass(playerLoc)
-    ModularCore.classId = classId
+    -- local playerLoc = PlayerLocation:CreateFromUnit("player")
+    -- local _, _ , classId = C_PlayerInfo.GetClass(playerLoc)
+    -- ModularCore.classId = classId
     
-    local currentSpecIndex = GetSpecialization()
-    if currentSpecIndex then
-        local id, currentSpecName =  GetSpecializationInfoForClassID(ModularCore.classId, currentSpecIndex)
-        ModularCore.specId = id
-        ModularCore.specName = currentSpecName
-    else
-        return
-    end
+    -- local currentSpecIndex = GetSpecialization()
+    -- if currentSpecIndex then
+    --     local id, currentSpecName =  GetSpecializationInfoForClassID(ModularCore.classId, currentSpecIndex)
+    --     ModularCore.specId = id
+    --     ModularCore.specName = currentSpecName
+    -- else
+    --     return
+    -- end
     
     
 	self.db = LibStub("AceDB-3.0"):New("ModularCDM_DB", self.defaults, true)

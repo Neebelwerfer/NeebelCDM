@@ -98,80 +98,43 @@ function RuntimeNode:GetChildren(isVisibleOnly)
     return visibleChildren
 end
 
-function RuntimeNode:ApplyHorizontalLayout(children)
-    local anchorMode = self.node.layout.dynamic.anchorMode
-    local spacing = self.node.layout.dynamic.spacing
-    
-    --- Calculate width
-    local totalWidth = 0
-    for _, child in pairs(children) do
-        totalWidth = totalWidth + child.rootFrame:GetWidth()
-    end
-    totalWidth = totalWidth + (spacing * math.max(0, #children - 1))
-
-    local currentX = 0
-    local step = 1
-    local centerOffset = 0
-
-    if anchorMode == GroupAnchorMode.Centered then
-        currentX = -totalWidth / 2
-        centerOffset = 0.5
-    elseif anchorMode == GroupAnchorMode.Trailing then
-        step = -1
-    end
-
-    for _, child in pairs(children) do
-        local childWidth = child.rootFrame:GetWidth()
-        local offsetX = currentX + childWidth * centerOffset
-
-        child.rootFrame:SetPoint("CENTER", self.rootFrame, "CENTER", offsetX, 0)
-        currentX = currentX + (childWidth + spacing) * step
-    end
-end
-
-function RuntimeNode:ApplyVerticalLayout(children)
-    local anchorMode = self.node.layout.dynamic.anchorMode
-    local spacing = self.node.layout.dynamic.spacing
-    
-    --- Calculate width
-    local totalHeight = 0
-    for _, child in pairs(children) do
-        totalHeight = totalHeight + child.rootFrame:GetHeight()
-    end
-    totalHeight = totalHeight + (spacing * math.max(0, #children - 1))
-
-    local currentY = 0
-    local step = 1
-    local centerOffset = 0
-
-    if anchorMode == GroupAnchorMode.Centered then
-        currentY = -totalHeight / 2
-        centerOffset = 0.5
-    elseif anchorMode == GroupAnchorMode.Trailing then
-        step = -1
-    end
-
-    for _, child in pairs(children) do
-        local childHeight = child.rootFrame:GetHeight()
-        local offsetY = currentY + childHeight * centerOffset
-
-        child.rootFrame:SetPoint("CENTER", self.rootFrame, "CENTER", 0, offsetY)
-        currentY = currentY + (childHeight + spacing) * step
-    end
-end
-
 
 function RuntimeNode:ApplyDynamicLayout()
     local children = self:GetChildren(self.node.layout.dynamic.collapse)
-
     if #children == 0 then return end
-
     local layout = self.node.layout.dynamic
+    local anchorMode = self.node.layout.dynamic.anchorMode
+    local spacing = self.node.layout.dynamic.spacing
+    local isHorizontal = layout.axis == GroupAxis.Horizontal
+    
+    --- Calculate Size
+    local totalSize = 0
+    for _, child in pairs(children) do
+        totalSize = totalSize + (isHorizontal and child.rootFrame:GetWidth() or child.rootFrame:GetHeight())
+    end
+    totalSize = totalSize + (spacing * math.max(0, #children - 1))
 
-    if layout.axis == GroupAxis.Horizontal then
-        self:ApplyHorizontalLayout(children)
-    elseif layout.axis == GroupAxis.Vertical then
-        self:ApplyVerticalLayout(children)
+    local currentOffset = 0
+    local step = 1
+    local centerOffset = 0
+
+    if anchorMode == GroupAnchorMode.Centered then
+        currentOffset = -totalSize / 2
+        centerOffset = 0.5
+    elseif anchorMode == GroupAnchorMode.Trailing then
+        step = -1
+    end
+
+    for _, child in pairs(children) do
+        local childHeight = isHorizontal and child.rootFrame:GetWidth() or child.rootFrame:GetHeight()
+        local offsetY = currentOffset + childHeight * centerOffset
+
+        if isHorizontal then
+            child.rootFrame:SetPoint("CENTER", self.rootFrame, "CENTER", offsetY, 0)
+        else
+            child.rootFrame:SetPoint("CENTER", self.rootFrame, "CENTER", 0, offsetY)
+        end
+        currentOffset = currentOffset + (childHeight + spacing) * step
     end
 end
 

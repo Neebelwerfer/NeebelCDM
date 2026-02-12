@@ -93,12 +93,12 @@ function NodeFactory.CreateDynamicGroup()
         name = "Dynamic Group",
         frames = {},
         layout = {
-            size = { width = 512, height = 512 },
+            size = { width = 48, height = 48 },
             padding = { left = 0, right = 0, top = 0, bottom = 0 },
             dynamic = {
                 enabled = true,
-                axis = GroupAxis.Vertical,
-                anchorMode = GroupAnchorMode.Leading,
+                axis = GroupAxis.Horizontal,
+                anchorMode = GroupAnchorMode.Centered,
                 spacing = 0,
                 collapse = false,
                 maxPerRow = 0
