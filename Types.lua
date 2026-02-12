@@ -28,10 +28,15 @@ DataTypes = {
     Unit = 5
 }
 
----@enum GroupGrowDirection
-GroupGrowDirection = {
-    Up = 1,
-    Down = 2,
-    Left = 3,
-    Right = 4
+---@enum GroupAxis
+GroupAxis = {
+    Vertical = 1,
+    Horizontal = 2
+}
+
+---@enum GroupAnchorMode
+GroupAnchorMode = {
+    Leading = 1,
+    Centered = 2,
+    Trailing = 3
 }

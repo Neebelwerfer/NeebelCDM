@@ -12,62 +12,174 @@ RuntimeNode.__index = RuntimeNode
 ---@param parentRuntimeNode RuntimeNode?
 ---@return RuntimeNode
 function RuntimeNode:new(node, parentRuntimeNode)
-    local self = setmetatable({}, RuntimeNode)
+    local runtimeNode = setmetatable({}, RuntimeNode)
     
-    self.node = node
-    self.guid = node.guid
-    self.parentRuntimeNode = parentRuntimeNode
-    self.frames = {}
-    
-    
+    runtimeNode.node = node
+    runtimeNode.guid = node.guid
+    runtimeNode.parentRuntimeNode = parentRuntimeNode
+    runtimeNode.frames = {}
+    runtimeNode.internalState = {
+        dirtyLayout = true,
+        visible = true
+    }
     
     -- Register Bindings
     for _, binding in ipairs(node.bindings) do
-        DataContext.RegisterBinding(self.guid, binding)
+        DataContext.RegisterBinding(runtimeNode.guid, binding)
     end
-    
-    -- Determine parent frame
-    local parentFrame = parentRuntimeNode and parentRuntimeNode.rootFrame or UIParent
     
     -- Get all the resolved props 
     -- TODO: Re-think this loop?
     local resolvedPropsPerFrame = {}
     for _, frameDescriptor in ipairs(node.frames) do
-        local resolvedProps = self:ResolvePropsForFrame(frameDescriptor)
+        local resolvedProps = runtimeNode:ResolvePropsForFrame(frameDescriptor)
         resolvedPropsPerFrame[frameDescriptor.name] = resolvedProps
     end
 
+    -- Determine parent frame
+    local parentFrame = parentRuntimeNode and parentRuntimeNode.rootFrame or UIParent
     -- Build root frame and all child frames
-    self.rootFrame = FrameBuilder.BuildRootFrame(node, parentFrame, resolvedPropsPerFrame)
+    runtimeNode.rootFrame = FrameBuilder.BuildRootFrame(node, parentFrame, resolvedPropsPerFrame)
 
-    return self
+    return runtimeNode
 end
 
+function RuntimeNode:UpdateTransforms()
+    local parentFrame = self.parentRuntimeNode and self.parentRuntimeNode.rootFrame or UIParent
+
+    self.rootFrame:SetSize(self.node.layout.size.width, self.node.layout.size.height)
+    self.rootFrame:SetPoint(self.node.transform.point, parentFrame, self.node.transform.relativePoint, self.node.transform.offsetX, self.node.transform.offsetY)
+    self.rootFrame:SetScale(self.node.transform.scale)
+end
 
 function RuntimeNode:Update()
     for _, frameContext in pairs(self.rootFrame.frames) do
         self:UpdateFrame(frameContext.frame, frameContext.descriptor)
     end
 
-    for _, childNode in pairs(self.node.children) do
-        local childRuntimeNode = RuntimeNodeManager.lookupTable[childNode.guid]
+    for _, childGuid in pairs(self.node.children) do
+        local childRuntimeNode = RuntimeNodeManager.lookupTable[childGuid]
         childRuntimeNode:Update()
     end
+
+    if self.internalState.dirtyLayout then
+        self:UpdateTransforms()
+        if self.node.layout.dynamic.enabled then
+            self:ApplyDynamicLayout()
+        end
+        self.internalState.dirtyLayout = false
+    end
+end
+
+
+------------------------------------
+--- Update layout
+------------------------------------
+
+function RuntimeNode:MarkLayoutAsDirty()
+    self.internalState.dirtyLayout = true
+
+    if self.parentRuntimeNode then
+        self.parentRuntimeNode:MarkLayoutAsDirty()
+    end
 end
 
 ---comment
----@param alias string
----@return BindingDescriptor?
-function RuntimeNode:FindBinding(alias)
-    for _, binding in ipairs(self.node.bindings) do
-        if binding.alias == alias then
-            return binding
+---@param isVisibleOnly boolean
+---@return RuntimeNode[]
+function RuntimeNode:GetChildren(isVisibleOnly)
+    local visibleChildren = {}
+    for _, childGuid in pairs(self.node.children) do
+        local childRuntimeNode = RuntimeNodeManager.lookupTable[childGuid]
+        if not isVisibleOnly or childRuntimeNode.internalState.visible then
+            table.insert(visibleChildren, childRuntimeNode)
         end
     end
-    return nil
+    return visibleChildren
 end
 
----comment
+function RuntimeNode:ApplyHorizontalLayout(children)
+    local anchorMode = self.node.layout.dynamic.anchorMode
+    local spacing = self.node.layout.dynamic.spacing
+    
+    --- Calculate width
+    local totalWidth = 0
+    for _, child in pairs(children) do
+        totalWidth = totalWidth + child.rootFrame:GetWidth()
+    end
+    totalWidth = totalWidth + (spacing * math.max(0, #children - 1))
+
+    local currentX = 0
+    local step = 1
+    local centerOffset = 0
+
+    if anchorMode == GroupAnchorMode.Centered then
+        currentX = -totalWidth / 2
+        centerOffset = 0.5
+    elseif anchorMode == GroupAnchorMode.Trailing then
+        step = -1
+    end
+
+    for _, child in pairs(children) do
+        local childWidth = child.rootFrame:GetWidth()
+        local offsetX = currentX + childWidth * centerOffset
+
+        child.rootFrame:SetPoint("CENTER", self.rootFrame, "CENTER", offsetX, 0)
+        currentX = currentX + (childWidth + spacing) * step
+    end
+end
+
+function RuntimeNode:ApplyVerticalLayout(children)
+    local anchorMode = self.node.layout.dynamic.anchorMode
+    local spacing = self.node.layout.dynamic.spacing
+    
+    --- Calculate width
+    local totalHeight = 0
+    for _, child in pairs(children) do
+        totalHeight = totalHeight + child.rootFrame:GetHeight()
+    end
+    totalHeight = totalHeight + (spacing * math.max(0, #children - 1))
+
+    local currentY = 0
+    local step = 1
+    local centerOffset = 0
+
+    if anchorMode == GroupAnchorMode.Centered then
+        currentY = -totalHeight / 2
+        centerOffset = 0.5
+    elseif anchorMode == GroupAnchorMode.Trailing then
+        step = -1
+    end
+
+    for _, child in pairs(children) do
+        local childHeight = child.rootFrame:GetHeight()
+        local offsetY = currentY + childHeight * centerOffset
+
+        child.rootFrame:SetPoint("CENTER", self.rootFrame, "CENTER", 0, offsetY)
+        currentY = currentY + (childHeight + spacing) * step
+    end
+end
+
+
+function RuntimeNode:ApplyDynamicLayout()
+    local children = self:GetChildren(self.node.layout.dynamic.collapse)
+
+    if #children == 0 then return end
+
+    local layout = self.node.layout.dynamic
+
+    if layout.axis == GroupAxis.Horizontal then
+        self:ApplyHorizontalLayout(children)
+    elseif layout.axis == GroupAxis.Vertical then
+        self:ApplyVerticalLayout(children)
+    end
+end
+
+------------------------------------
+--- Update frames
+------------------------------------
+
+--- Updates a frame
 ---@param frame Frame
 ---@param descriptor FrameDescriptor
 function RuntimeNode:UpdateFrame(frame, descriptor)
@@ -75,6 +187,7 @@ function RuntimeNode:UpdateFrame(frame, descriptor)
     FrameBuilder.UpdateFrameByProps(frame, descriptor, resolvedProps)
 end
 
+--- Updates all properties for a frame
 function RuntimeNode:ResolvePropsForFrame(frameDescription)
     local resolvedProps = {}
     for propName, prop in pairs(frameDescription.props) do
@@ -83,7 +196,7 @@ function RuntimeNode:ResolvePropsForFrame(frameDescription)
     return resolvedProps
 end
 
----Recursively resolve a prop (handles nested structures)
+--- Recursively resolve a prop (handles nested structures)
 function RuntimeNode:ResolveProp(prop)
     -- Handle arrays (like cooldowns)
     if type(prop) == "table" and #prop > 0 then
@@ -119,4 +232,16 @@ function RuntimeNode:ResolveProp(prop)
     end
     
     return prop
+end
+
+---Find a binding with specific alias
+---@param alias string
+---@return BindingDescriptor?
+function RuntimeNode:FindBinding(alias)
+    for _, binding in ipairs(self.node.bindings) do
+        if binding.alias == alias then
+            return binding
+        end
+    end
+    return nil
 end

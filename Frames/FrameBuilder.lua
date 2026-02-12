@@ -11,12 +11,11 @@ function FrameBuilder.BuildRootFrame(node, parentFrame, resolvedFrameProps)
     root:SetPoint(node.transform.point, parentFrame, node.transform.relativePoint, node.transform.offsetX, node.transform.offsetY)
     root:SetScale(node.transform.scale)
     
-    
     for _, frameDescriptor in pairs(node.frames) do
         local frame = FrameBuilder.BuildFrameFromDescriptor(node, root, frameDescriptor, resolvedFrameProps[frameDescriptor.name])
         root.frames[frameDescriptor.name] = {frame = frame, descriptor = frameDescriptor}
     end
-    
+
     root:Show()
     return root
 end
@@ -34,6 +33,7 @@ function FrameBuilder.BuildIconFrame(node, rootFrame, frameDescriptor, resolvedP
     frame:SetPoint(
         "CENTER",
         rootFrame,
+        frameDescriptor.transform.relativePoint,
         frameDescriptor.transform.offsetX,
         frameDescriptor.transform.offsetY
     )

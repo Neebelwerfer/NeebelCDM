@@ -49,6 +49,14 @@ function ModularCore:OnInitialize()
     self:RegisterChatCommand("ModularCDM", "SlashCommand")
     self:RegisterChatCommand("ncdm", "SlashCommand")
 
+
+    local dynamicGroup = NodeFactory.CreateDynamicGroup()
+    dynamicGroup.guid = "test-dynamic-group-001"
+    dynamicGroup.transform.scale = 1
+    dynamicGroup.transform.point = "CENTER"
+    dynamicGroup.transform.offsetX = 0
+    dynamicGroup.transform.offsetY = 0
+
     local premeditationNode = NodeFactory.CreateIcon()
     premeditationNode.guid = "test-icon-002"
     premeditationNode.layout.size.width = 48
@@ -91,12 +99,14 @@ function ModularCore:OnInitialize()
     }
 
     local shadowDanceNode = NodeFactory.CreateIcon()
+    assert(shadowDanceNode.layout.dynamic)
     shadowDanceNode.guid = "test-icon-001"
     shadowDanceNode.layout.size.width = 48
     shadowDanceNode.layout.size.height = 48
     shadowDanceNode.transform.point = "CENTER"
     shadowDanceNode.transform.offsetX = 10
     shadowDanceNode.transform.offsetY = -125
+
 
     -- Add an icon frame descriptor (if not already there by default)
     local iconDescriptor = FrameDescriptionFactory.CreateIconFrame()
@@ -141,7 +151,43 @@ function ModularCore:OnInitialize()
         }
     }
 
-    RuntimeNodeManager:BuildAll({[shadowDanceNode.guid] = shadowDanceNode, [premeditationNode.guid] = premeditationNode})
+    local testNode = NodeFactory.CreateIcon()
+    assert(testNode.layout.dynamic)
+    testNode.guid = "test-icon-010"
+    testNode.layout.size.width = 48
+    testNode.layout.size.height = 48
+    testNode.transform.point = "CENTER"
+    testNode.transform.offsetX = 10
+    testNode.transform.offsetY = -125
+
+    testNode.bindings = {
+        {
+            type = DataTypes.Spell,
+            alias = "Test Spell",
+            key = 185313
+        }
+    }
+
+    -- Add an icon frame descriptor (if not already there by default)
+    local iconDescriptor = FrameDescriptionFactory.CreateIconFrame()
+    iconDescriptor.props.icon.resolveType = "binding"
+    iconDescriptor.props.icon.value = {binding = "Test Spell", field = "icon"}
+
+    testNode.frames = {
+        iconDescriptor
+    }
+
+    dynamicGroup.children = {
+        shadowDanceNode.guid,
+        premeditationNode.guid,
+        testNode.guid
+    }
+
+    shadowDanceNode.parentGuid = dynamicGroup.guid
+    premeditationNode.parentGuid = dynamicGroup.guid
+    testNode.parentGuid = dynamicGroup.guid
+
+    RuntimeNodeManager.BuildAll({[dynamicGroup.guid] = dynamicGroup, [premeditationNode.guid] = premeditationNode, [shadowDanceNode.guid] = shadowDanceNode, [testNode.guid] = testNode})
     self:ScheduleRepeatingTimer("Update", 0.2)
 
     -- self:RegisterEvent("SPELL_UPDATE_COOLDOWN", "UpdateCooldown")
@@ -186,7 +232,7 @@ end
 function ModularCore:Update()
     DataContext.UpdateContext()
 
-    RuntimeNodeManager:UpdateNodes()
+    RuntimeNodeManager.UpdateNodes()
 end
 
 function ModularCore:OnEnable()

@@ -27,7 +27,7 @@ Node.NodeTypes = {
 ---@class Layout
 ---@field size { width: number, height: number }
 ---@field padding { left: number, right: number, top: number, bottom: number }
----@field dynamic { enabled: boolean, direction: GroupGrowDirection, spacing: number, collapse: boolean }
+---@field dynamic { enabled: boolean, axis: GroupAxis, anchorMode: GroupAnchorMode, spacing: number, collapse: boolean, maxPerRow: number }
 
 ---@class Transform
 ---@field point string
@@ -75,7 +75,7 @@ function Node:New(overrides)
 
 
         -- Layout
-        layout = {        
+        layout = {      
             size = {
                 width = 0,
                 height = 0
@@ -88,9 +88,11 @@ function Node:New(overrides)
             },
             dynamic = {
                 enabled = false,
-                direction = GroupGrowDirection.Left,
+                axis = GroupAxis.Horizontal,
+                anchorMode = GroupAnchorMode.Centered,
                 spacing = 4,
                 collapse = true,     -- skip invisible/disabled children
+                maxPerRow = 4
             }
         },
 

@@ -12,6 +12,17 @@ NodeFactory.TemplateTypes = {
     DynamicGroup = 255 -- Used for dynamic positioning of children
 }
 
+local function DefaultDynamicLayout()
+    return {
+        enabled = false,
+        axis = GroupAxis.Right,
+        anchorMode = GroupAnchorMode.Left,
+        spacing = 4,
+        collapse = true,
+        maxPerRow = 5
+    }
+end
+
 ---Create an Icon template (icon + cooldown + text)
 ---@return Node
 function NodeFactory.CreateIcon()
@@ -24,12 +35,7 @@ function NodeFactory.CreateIcon()
         layout = {
             size = { width = 36, height = 36 },
             padding = { left = 0, right = 0, top = 0, bottom = 0 },
-            dynamic = {
-                enabled = false,
-                direction = GroupGrowDirection.Right,
-                spacing = 4,
-                collapse = true
-            }
+            dynamic = DefaultDynamicLayout()
         }
     })
 end
@@ -45,12 +51,7 @@ function NodeFactory.CreateBar()
         layout = {
             size = { width = 200, height = 20 },
             padding = { left = 0, right = 0, top = 0, bottom = 0 },
-            dynamic = {
-                enabled = false,
-                direction = GroupGrowDirection.Right,
-                spacing = 4,
-                collapse = true
-            }
+            dynamic = DefaultDynamicLayout()
         }
     })
 end
@@ -66,12 +67,7 @@ function NodeFactory.CreateText()
         layout = {
             size = { width = 100, height = 20 },
             padding = { left = 0, right = 0, top = 0, bottom = 0 },
-            dynamic = {
-                enabled = false,
-                direction = GroupGrowDirection.Right,
-                spacing = 4,
-                collapse = true
-            }
+            dynamic = DefaultDynamicLayout()
         }
     })
 end
@@ -85,12 +81,7 @@ function NodeFactory.CreateEmpty()
         layout = {
             size = { width = 100, height = 100 },
             padding = { left = 0, right = 0, top = 0, bottom = 0 },
-            dynamic = {
-                enabled = false,
-                direction = GroupGrowDirection.Right,
-                spacing = 4,
-                collapse = true
-            }
+            dynamic = DefaultDynamicLayout()
         }
     })
 end
@@ -102,13 +93,15 @@ function NodeFactory.CreateDynamicGroup()
         name = "Dynamic Group",
         frames = {},
         layout = {
-            size = { width = 0, height = 0 },
+            size = { width = 512, height = 512 },
             padding = { left = 0, right = 0, top = 0, bottom = 0 },
             dynamic = {
                 enabled = true,
-                direction = GroupGrowDirection.Right,
-                spacing = 4,
-                collapse = true
+                axis = GroupAxis.Vertical,
+                anchorMode = GroupAnchorMode.Leading,
+                spacing = 0,
+                collapse = false,
+                maxPerRow = 0
             }
         }
     })
@@ -126,12 +119,7 @@ function NodeFactory.CreateIconButton()
         layout = {
             size = { width = 36, height = 36 },
             padding = { left = 0, right = 0, top = 0, bottom = 0 },
-            dynamic = {
-                enabled = false,
-                direction = GroupGrowDirection.Right,
-                spacing = 4,
-                collapse = true
-            }
+            dynamic = DefaultDynamicLayout()
         }
     })
 end
@@ -148,12 +136,7 @@ function NodeFactory.CreateTextButton()
         layout = {
             size = { width = 100, height = 30 },
             padding = { left = 5, right = 5, top = 5, bottom = 5 },
-            dynamic = {
-                enabled = false,
-                direction = GroupGrowDirection.Right,
-                spacing = 4,
-                collapse = true
-            }
+            dynamic = DefaultDynamicLayout()
         }
     })
 end

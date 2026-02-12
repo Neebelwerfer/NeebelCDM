@@ -1,39 +1,40 @@
-RuntimeNodeManager = {}
+RuntimeNodeManager = {
+    roots = {},
+    lookupTable = {}
+}
 
 ---comment
 ---@param nodes table<string, Node>
-function RuntimeNodeManager:BuildAll(nodes)
-    self.roots = {}
-    self.lookupTable = {}
+function RuntimeNodeManager.BuildAll(nodes)
+    RuntimeNodeManager.roots = {}
+    RuntimeNodeManager.lookupTable = {}
 
     for _, node in pairs(nodes) do
         if node.parentGuid == nil then
-            table.insert(self.roots, node)
+            local rootRuntimeNode = RuntimeNodeManager.BuildRuntimeNode(nodes, node)
+            RuntimeNodeManager.lookupTable[rootRuntimeNode.guid] = rootRuntimeNode
+            table.insert(RuntimeNodeManager.roots, rootRuntimeNode)
         end
     end
-
-    for _, root in pairs(self.roots) do
-        self:BuildRuntimeNode(nodes, root, nil)
-    end
 end
-
 
 ---comment
 ---@param nodes table<string, Node>
 ---@param node Node
 ---@param parentRuntimeNode? RuntimeNode
-function RuntimeNodeManager:BuildRuntimeNode(nodes, node, parentRuntimeNode)
+function RuntimeNodeManager.BuildRuntimeNode(nodes, node, parentRuntimeNode)
     local runtimeNode = RuntimeNode:new(node, parentRuntimeNode)
 
-    self.lookupTable[node.guid] = runtimeNode
-
     for _, childNode in pairs(node.children) do
-        self:BuildRuntimeNode(nodes, nodes[childNode], runtimeNode)
+        local childRuntimeNode = RuntimeNodeManager.BuildRuntimeNode(nodes, nodes[childNode], runtimeNode)
+        RuntimeNodeManager.lookupTable[childRuntimeNode.guid] = childRuntimeNode
     end
+
+    return runtimeNode
 end
 
-function RuntimeNodeManager:UpdateNodes()
-    for _, runtimeNode in pairs(self.lookupTable) do
-        runtimeNode:Update()
+function RuntimeNodeManager.UpdateNodes()
+    for _, rootRuntimeNode in pairs(RuntimeNodeManager.roots) do
+        rootRuntimeNode:Update()
     end
 end
