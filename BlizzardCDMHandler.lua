@@ -55,6 +55,24 @@ function BlizzardCDMHandler.UpdateVisibility()
         BuffBarCooldownViewer:SetShown(not BlizzardCDMHandler.options.disableBuffBars)
         EssentialCooldownViewer:SetShown(not BlizzardCDMHandler.options.disableEssentialCooldowns)
         UtilityCooldownViewer:SetShown(not BlizzardCDMHandler.options.disableUtilityCooldowns)
+
+        -- for _, viewer in pairs({ BuffIconCooldownViewer, BuffBarCooldownViewer, EssentialCooldownViewer, UtilityCooldownViewer }) do
+        --     for _, child in pairs(viewer:GetLayoutChildren()) do
+        --         local disabled = false
+        --         for id, _ in pairs(BlizzardCDMHandler.options.disabledIds) do
+        --             local spellID = C_Spell.GetSpellInfo(id).spellID
+        --             if child:SpellIDMatchesAnyAssociatedSpellIDs(spellID) then
+        --                 child:Hide()
+        --                 disabled = true
+        --                 break
+        --             end
+        --         end
+
+        --         if not disabled then
+        --             child:Show()
+        --         end
+        --     end
+        -- end
     end
 end
 
@@ -80,10 +98,13 @@ end
 function BlizzardCDMHandler.AddDisabledID(id)
     if C_Spell.DoesSpellExist(id) then
         BlizzardCDMHandler.options.disabledIds[id] = true
+
+        BlizzardCDMHandler.UpdateVisibility()
     end
 end
 
 function BlizzardCDMHandler.RemoveDisabledID(id)
     BlizzardCDMHandler.options.disabledIds[id] = nil
 
+    BlizzardCDMHandler.UpdateVisibility()
 end
