@@ -27,6 +27,13 @@ end
 function NodesTab.BuildTree()
     local tree = {}
     
+    local addNode = {
+        value = "add",
+        text = "Add Node",
+        icon = AddSign,
+    }
+    table.insert(tree, addNode)
+
     for _, runtimeNode in ipairs(RuntimeNodeManager.roots) do
         table.insert(tree, NodesTab.BuildTreeNode(runtimeNode))
     end
@@ -87,25 +94,25 @@ function NodesTab.OpenContextMenu(frame, guid)
             NodesTab.DuplicateNode(guid)
         end)
         
-        description:CreateDivider()
+        -- description:CreateDivider()
         
-        description:CreateButton("Move Up", function()
-            NodesTab.MoveNode(guid, -1)
-        end)
+        -- description:CreateButton("Move Up", function()
+        --     NodesTab.MoveNode(guid, -1)
+        -- end)
         
-        description:CreateButton("Move Down", function()
-            NodesTab.MoveNode(guid, 1)
-        end)
+        -- description:CreateButton("Move Down", function()
+        --     NodesTab.MoveNode(guid, 1)
+        -- end)
         
-        description:CreateDivider()
+        -- description:CreateDivider()
         
-        description:CreateButton("Copy", function()
-            NodesTab.CopyNode(guid)
-        end)
+        -- description:CreateButton("Copy", function()
+        --     NodesTab.CopyNode(guid)
+        -- end)
         
-        description:CreateButton("Paste as Child", function()
-            NodesTab.PasteNode(guid)
-        end)
+        -- description:CreateButton("Paste as Child", function()
+        --     NodesTab.PasteNode(guid)
+        -- end)
         
         description:CreateDivider()
         
@@ -127,15 +134,23 @@ end
 --TODO: Dont rebuild Inspector every time
 function NodesTab.OnNodeSelected(container, event, path)
     -- Extract GUID from path (last segment after \001)
-    for _, button in ipairs(NodesTab.treeGroup.buttons) do
-        button:HookScript("OnClick", function(frame, mouseButton) --TODO: Fix duplicate hooks
-            if mouseButton == "RightButton" then
-                NodesTab.OpenContextMenu(frame, frame.value)
-            end
-        end)
+    for _, button in ipairs(NodesTab.treeGroup.buttons) do --TODO: Make it not hook on addNode, also is this the best way to do this?
+        if not AceHook:IsHooked(button, "OnClick") and button.value ~= "add" then
+            AceHook:HookScript(button, "OnClick", function(frame, mouseButton)
+                if mouseButton == "RightButton" then
+                    print("Right click")
+                    NodesTab.OpenContextMenu(frame, frame.value)
+                end
+            end)
+        end
     end
 
     container:ReleaseChildren()
+    if path == "add" then
+        print("Add Node") -- TODO: Use container to show add templates.
+        return
+    end
+
 
     local guid = path:match("([^\001]+)$")
     NodesTab.selectedNodeGuid = guid
