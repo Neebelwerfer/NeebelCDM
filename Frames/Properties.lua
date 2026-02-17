@@ -31,51 +31,39 @@ PropertyFactory = {}
 
 ---@generic T
 ---@class StaticPropDescriptor<T>
----@field allowedResolveTypes ["static"]
 ---@field resolveType "static"
----@field valueType string
 ---@field value T
 
 ---@class BoundPropDescriptor
----@field allowedResolveTypes ["binding"]
 ---@field resolveType "binding"
----@field valueType string
 ---@field value BindingValueDescriptor
 
 ---@generic T
 ---@class FlexiblePropDescriptor<T>
----@field allowedResolveTypes ["static", "binding"]
 ---@field resolveType "static" | "binding"
----@field valueType string
 ---@field value T | BindingValueDescriptor
 
 -- Helpers for creating props
 ---@return FlexiblePropDescriptor
-local function FlexibleProp(valueType, defaultValue)
+local function FlexibleProp(defaultValue)
     return {
-        allowedResolveTypes = {"static", "binding"},
         resolveType = "static",
-        valueType = valueType,
         value = defaultValue
     }
 end
 
 ---@return BoundPropDescriptor
-local function BoundProp(valueType, defaultValue)
+local function BoundProp(defaultValue)
     return {
-        allowedResolveTypes = {"binding"},
         resolveType = "binding",
-        valueType = valueType,
         value = defaultValue
     }
 end
 
 ---@return StaticPropDescriptor
-local function StaticProp(valueType, defaultValue)
+local function StaticProp(defaultValue)
     return {
-        allowedResolveTypes = {"static"},
         resolveType = "static",
-        valueType = valueType,
         value = defaultValue
     }
 end
@@ -83,39 +71,39 @@ end
 ---@return IconProps
 function PropertyFactory.DefaultIconPropeties()
     return {
-        icon = FlexibleProp("number", 134400),
-        colorMask = FlexibleProp("Color", Color(1, 1, 1, 1)),
+        icon = FlexibleProp(134400),
+        colorMask = FlexibleProp(Color(1, 1, 1, 1)),
         cooldowns = {}
     }
 end
 
 function PropertyFactory.DefaultBarProperties()
     return {
-        texture = FlexibleProp("string", "Interface\\TargetingFrame\\UI-StatusBar"),
-        color = FlexibleProp("Color", Color(1, 1, 1, 1)),
-        min = FlexibleProp("number", 0),
-        max = FlexibleProp("number", 100),
-        value = BoundProp("number", nil),
-        reverse = FlexibleProp("boolean", false),
-        orientation = StaticProp("string", "HORIZONTAL")
+        texture = FlexibleProp("Interface\\TargetingFrame\\UI-StatusBar"),
+        color = FlexibleProp(Color(1, 1, 1, 1)),
+        min = FlexibleProp(0),
+        max = FlexibleProp(100),
+        value = BoundProp(nil),
+        reverse = FlexibleProp(false),
+        orientation = StaticProp("HORIZONTAL")
     }
 end
 
 function PropertyFactory.DefaultTextProperties()
     return {
-        text = FlexibleProp("string", "Text"),
-        color = FlexibleProp("Color", Color(1, 1, 1, 1)),
-        fontSize = FlexibleProp("number", 12)
+        text = FlexibleProp("Text"),
+        color = FlexibleProp(Color(1, 1, 1, 1)),
+        fontSize = FlexibleProp(12)
     }
 end
 
 function PropertyFactory.DefaultCooldownProperties()
     return {
-            cooldown = BoundProp("Cooldown", nil),
-            hideCountdown = FlexibleProp("boolean", false),
-            swipe = {enabled = FlexibleProp("boolean", true), color = FlexibleProp("Color", Color(0.0, 0.0, 0.0, 0.8))},
-            edge = {enabled = FlexibleProp("boolean", false), color = FlexibleProp("Color", Color(1, 1, 1, 1)), scale = FlexibleProp("number", 1.5)},
-            bling = {enabled = FlexibleProp("boolean", false), color = FlexibleProp("Color", Color(0.5, 0.5, 0.5, 1))},
-            reverse = FlexibleProp("boolean", false),
+            cooldown = BoundProp(nil),
+            hideCountdown = FlexibleProp(false),
+            swipe = {enabled = FlexibleProp(true), color = FlexibleProp(Color(0.0, 0.0, 0.0, 0.8))},
+            edge = {enabled = FlexibleProp(false), color = FlexibleProp(Color(1, 1, 1, 1)), scale = FlexibleProp(1.5)},
+            bling = {enabled = FlexibleProp(false), color = FlexibleProp(Color(0.5, 0.5, 0.5, 1))},
+            reverse = FlexibleProp(false),
     }
 end

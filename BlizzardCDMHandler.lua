@@ -1,3 +1,5 @@
+---TODO: Revisit this whole file. I should fix the handling of frames to be less precarious
+
 local hook = LibStub("AceHook-3.0")
 
 BlizzardCDMHandler = {
