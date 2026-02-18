@@ -81,16 +81,20 @@ function SpellContext:new(key)
             duration = cooldown.duration,
             modRate = cooldown.modRate,
         },
-        charges = {
+        charges = nil
+    }
+
+    if charges then
+        context.charges = {
             current = charges.currentCharges,
             max = charges.maxCharges,
             cooldown = {
                 start = charges.cooldownStartTime,
                 duration = charges.cooldownDuration,
                 modRate = charges.chargeModRate
-            }
+            },
         }
-    }
+    end
 
     context.cooldown.remaining = function()
         if not self.internal.cooldownDurationUtil then return 0 end
@@ -130,13 +134,17 @@ function SpellContext:Update()
     self.usable = isUsable
     self.noMana = noMana
 
-    self.charges = {
-        current = charges.currentCharges,
-        max = charges.maxCharges,
-        cooldown = {
-            start = charges.cooldownStartTime,
-            duration = charges.cooldownDuration,
-            modRate = charges.chargeModRate
-        },
-    }
+    if charges then
+        self.charges = {
+            current = charges.currentCharges,
+            max = charges.maxCharges,
+            cooldown = {
+                start = charges.cooldownStartTime,
+                duration = charges.cooldownDuration,
+                modRate = charges.chargeModRate
+            },
+        }
+    else
+        self.charges = nil
+    end
 end

@@ -81,56 +81,6 @@ function NodesTab.BuildTreeNode(runtimeNode)
     return treeNode
 end
 
-
-function NodesTab.OpenContextMenu(frame, guid)
-    local menu = MenuUtil.CreateContextMenu(frame, function (ownerRegion, description)
-        description:CreateTitle(frame.value)
-
-        description:CreateButton("Add Child Node", function()
-            NodesTab.ShowAddNodeDialog(guid)
-        end)
-        
-        description:CreateButton("Duplicate", function()
-            NodesTab.DuplicateNode(guid)
-        end)
-        
-        -- description:CreateDivider()
-        
-        -- description:CreateButton("Move Up", function()
-        --     NodesTab.MoveNode(guid, -1)
-        -- end)
-        
-        -- description:CreateButton("Move Down", function()
-        --     NodesTab.MoveNode(guid, 1)
-        -- end)
-        
-        -- description:CreateDivider()
-        
-        -- description:CreateButton("Copy", function()
-        --     NodesTab.CopyNode(guid)
-        -- end)
-        
-        -- description:CreateButton("Paste as Child", function()
-        --     NodesTab.PasteNode(guid)
-        -- end)
-        
-        description:CreateDivider()
-        
-        description:CreateButton("Rename", function()
-            NodesTab.ShowRenameDialog(guid)
-        end)
-        
-        description:CreateButton("Delete", function() --TODO: Make sure to delete the node in the node tables aswell, right now we just do it for the runtime node.
-            RuntimeNodeManager.RemoveNode(guid)
-        end)
-    end)
-
-    --Make menu appear on top
-    if menu then
-        menu:SetFrameStrata("TOOLTIP")
-    end
-end
-
 --TODO: Dont rebuild Inspector every time
 function NodesTab.OnNodeSelected(container, event, path)
     -- Extract GUID from path (last segment after \001)
@@ -173,16 +123,25 @@ end
 
 function NodesTab.OnInspectorTabSelected(container, event, group)
     container:ReleaseChildren()
+    container:SetLayout("Fill")
+    container:SetFullHeight(true)
+    container:SetFullWidth(true)
     
     if group == "properties" then
         NodesTab.BuildPropertiesPanel(container)
     elseif group == "layout" then
         NodesTab.BuildLayoutPanel(container)
     elseif group == "bindings" then
-        --NodesTab.BuildBindingsPanel(container)
+        NodesTab.BuildBindingsPanel(container)
     end
+
+    container:DoLayout()
 end
 
+
+--------------------------------------------
+--- Properties
+--------------------------------------------
 
 function NodesTab.BuildPropertiesPanel(container)
     local runtimeNode = RuntimeNodeManager.lookupTable[NodesTab.selectedNodeGuid]
@@ -341,103 +300,440 @@ function NodesTab.BuildPropEditor(container, label, propDescriptor, valueType, o
     end
 end
 
+
+--------------------------------------------
+--- Layout
+--------------------------------------------
+
 --- Build the layout panel which should help with arranging frames.
 ---@param container AceGUIContainer
 function NodesTab.BuildLayoutPanel(container)
     local runtimeNode = RuntimeNodeManager.lookupTable[NodesTab.selectedNodeGuid]
-    local nodeLayout = runtimeNode.node.layout
-    local nodeTransform = runtimeNode.node.transform
+    local node = runtimeNode.node
+    local nodeLayout = node.layout
+    local nodeTransform = node.transform
     
-    local group = AceGUI:Create("SimpleGroup")
-    group:SetFullWidth(true)
-    group:SetLayout("Flow")
-    container:AddChild(group)
-
-    --Alignment
-    local alignmentGroup = AceGUI:Create("InlineGroup")
-    alignmentGroup:SetTitle("Alignment")
-    alignmentGroup:SetFullWidth(true)
-    alignmentGroup:SetLayout("Flow")
-    group:AddChild(alignmentGroup)
-
-    local anchor = AceGUI:Create("Dropdown")
-    anchor:SetLabel("Anchor")
-    anchor:SetList({TOPLEFT="Top Left", TOP="Top", TOPRIGHT="Top Right", LEFT="Left", CENTER="Center", RIGHT="Right", BOTTOMLEFT="Bottom Left", BOTTOM="Bottom", BOTTOMRIGHT="Bottom Right"})
-    anchor:SetValue(nodeTransform.point)
-    anchor:SetRelativeWidth(0.5)
-    anchor:SetCallback("OnValueChanged", function(widget, event, value)
-        print ("Anchor changed to " .. value)
-        nodeTransform.point = value
+    -- Wrap ScrollFrame in SimpleGroup (same as Properties)
+    local scrollContainer = AceGUI:Create("SimpleGroup")
+    scrollContainer:SetFullWidth(true)
+    scrollContainer:SetHeight(10)
+    scrollContainer:SetLayout("Fill")
+    container:AddChild(scrollContainer)
+    
+    local scroll = AceGUI:Create("ScrollFrame")
+    scroll:SetLayout("Flow")
+    scrollContainer:AddChild(scroll)
+    
+    -- Transform Section
+    local transformGroup = AceGUI:Create("InlineGroup")
+    transformGroup:SetTitle("Transform")
+    transformGroup:SetFullWidth(true)
+    transformGroup:SetLayout("Flow")
+    scroll:AddChild(transformGroup)
+    
+    -- Anchor points
+    NodesTab.CreateDropdown(transformGroup, "Anchor Point", nodeTransform.point, 0.5, 
+        NodesTab.AnchorList, function(value)
+            nodeTransform.point = value
+            runtimeNode:MarkLayoutAsDirty()
+        end)
+    
+    NodesTab.CreateDropdown(transformGroup, "Relative To", nodeTransform.relativePoint, 0.5,
+        NodesTab.AnchorList, function(value)
+            nodeTransform.relativePoint = value
+            runtimeNode:MarkLayoutAsDirty()
+        end)
+    
+    -- Position
+    NodesTab.CreateNumberInput(transformGroup, "X Offset", nodeTransform.offsetX, 0.5, function(value)
+        nodeTransform.offsetX = value
         runtimeNode:MarkLayoutAsDirty()
     end)
-    alignmentGroup:AddChild(anchor)
-
-    local relative = AceGUI:Create("Dropdown")
-    relative:SetLabel("Relative To")
-    relative:SetList({TOPLEFT="Top Left", TOP="Top", TOPRIGHT="Top Right", LEFT="Left", CENTER="Center", RIGHT="Right", BOTTOMLEFT="Bottom Left", BOTTOM="Bottom", BOTTOMRIGHT="Bottom Right"})
-    relative:SetValue(nodeTransform.relativePoint)
-    relative:SetRelativeWidth(0.5)
-    relative:SetCallback("OnValueChanged", function(widget, event, value)
-        nodeTransform.relativePoint = value
+    
+    NodesTab.CreateNumberInput(transformGroup, "Y Offset", nodeTransform.offsetY, 0.5, function(value)
+        nodeTransform.offsetY = value
         runtimeNode:MarkLayoutAsDirty()
     end)
-    alignmentGroup:AddChild(relative)
     
-    --Position
-    local positionGroup = AceGUI:Create("InlineGroup")
-    positionGroup:SetTitle("Position")
-    positionGroup:SetFullWidth(true)
-    positionGroup:SetLayout("Flow")
-    group:AddChild(positionGroup)
-    
-    local x = AceGUI:Create("EditBox")
-    x:SetLabel("X")
-    x:SetText(tostring(nodeTransform.offsetX))
-    x:SetRelativeWidth(0.5)
-    x:SetCallback("OnEnterPressed", function(widget, event, text)
-        nodeTransform.offsetX = tonumber(text)
+    -- Scale
+    NodesTab.CreateNumberInput(transformGroup, "Scale", nodeTransform.scale or 1, 1, function(value)
+        nodeTransform.scale = value
         runtimeNode:MarkLayoutAsDirty()
     end)
-    positionGroup:AddChild(x)
     
-    local y = AceGUI:Create("EditBox")
-    y:SetLabel("Y")
-    y:SetText(tostring(nodeTransform.offsetY))
-    y:SetRelativeWidth(0.5)
-    y:SetCallback("OnEnterPressed", function(widget, event, text)
-        nodeTransform.offsetY = tonumber(text)
-        runtimeNode:MarkLayoutAsDirty()
-    end)
-    positionGroup:AddChild(y)
-    
-    --Size
-    local sizeGroup = AceGUI:Create("InlineGroup")
-    sizeGroup:SetTitle("Size")
+    -- Size Section
+    local sizeGroup = AceGUI:Create("SimpleGroup")
     sizeGroup:SetFullWidth(true)
     sizeGroup:SetLayout("Flow")
-    group:AddChild(sizeGroup)
+    scroll:AddChild(sizeGroup)
+    
+    NodesTab.CreateNumberInput(sizeGroup, "Width", nodeLayout.size.width, 0.5, function(value)
+        nodeLayout.size.width = value
+        runtimeNode:MarkLayoutAsDirty()
+    end)
+    
+    NodesTab.CreateNumberInput(sizeGroup, "Height", nodeLayout.size.height, 0.5, function(value)
+        nodeLayout.size.height = value
+        runtimeNode:MarkLayoutAsDirty()
+    end)
+    
+    -- Dynamic Layout Section
+    local dynamicGroup = AceGUI:Create("SimpleGroup")
+    dynamicGroup:SetFullWidth(true)
+    dynamicGroup:SetLayout("Flow")
+    scroll:AddChild(dynamicGroup)
+    
+    local enabledCheckbox = AceGUI:Create("CheckBox")
+    enabledCheckbox:SetLabel("Enable Dynamic Layout")
+    enabledCheckbox:SetValue(nodeLayout.dynamic.enabled)
+    enabledCheckbox:SetFullWidth(true)
+    enabledCheckbox:SetCallback("OnValueChanged", function(widget, event, value)
+        nodeLayout.dynamic.enabled = value
+        runtimeNode:MarkLayoutAsDirty()
+        NodesTab.RefreshInspector()
+    end)
+    dynamicGroup:AddChild(enabledCheckbox)
+    
+    if nodeLayout.dynamic.enabled then
+        -- Axis
+        NodesTab.CreateDropdown(dynamicGroup, "Axis", nodeLayout.dynamic.axis, 1,
+            {[GroupAxis.Horizontal] = "Horizontal", [GroupAxis.Vertical] = "Vertical"},
+            function(value)
+                nodeLayout.dynamic.axis = value
+                runtimeNode:MarkLayoutAsDirty()
+            end)
+        
+        -- Anchor Mode
+        NodesTab.CreateDropdown(dynamicGroup, "Anchor Mode", nodeLayout.dynamic.anchorMode, 1,
+            {[GroupAnchorMode.Leading] = "Leading", [GroupAnchorMode.Centered] = "Centered", [GroupAnchorMode.Trailing] = "Trailing"},
+            function(value)
+                nodeLayout.dynamic.anchorMode = value
+                runtimeNode:MarkLayoutAsDirty()
+            end)
+        
+        -- Spacing
+        NodesTab.CreateNumberInput(dynamicGroup, "Spacing", nodeLayout.dynamic.spacing, 0.5, function(value)
+            nodeLayout.dynamic.spacing = value
+            runtimeNode:MarkLayoutAsDirty()
+        end)
+        
+        -- Max Per Row
+        NodesTab.CreateNumberInput(dynamicGroup, "Max Per Row", nodeLayout.dynamic.maxPerRow, 0.5, function(value)
+            nodeLayout.dynamic.maxPerRow = value
+            runtimeNode:MarkLayoutAsDirty()
+        end)
+        
+        -- Collapse
+        local collapseCheckbox = AceGUI:Create("CheckBox")
+        collapseCheckbox:SetLabel("Collapse Hidden Children")
+        collapseCheckbox:SetValue(nodeLayout.dynamic.collapse)
+        collapseCheckbox:SetFullWidth(true)
+        collapseCheckbox:SetCallback("OnValueChanged", function(widget, event, value)
+            nodeLayout.dynamic.collapse = value
+            runtimeNode:MarkLayoutAsDirty()
+        end)
+        dynamicGroup:AddChild(collapseCheckbox)
+    end
 
-    local width = AceGUI:Create("EditBox")
-    width:SetLabel("Width")
-    width:SetText(tostring(nodeLayout.size.width))
-    width:SetRelativeWidth(0.5)
-    width:SetCallback("OnEnterPressed", function(widget, event, text)
-        nodeLayout.size.width = tonumber(text)
-        runtimeNode:MarkLayoutAsDirty()
-    end)
-    sizeGroup:AddChild(width)
-    
-    local height = AceGUI:Create("EditBox")
-    height:SetLabel("Height")
-    height:SetText(tostring(nodeLayout.size.height))
-    height:SetRelativeWidth(0.5)
-    height:SetCallback("OnEnterPressed", function(widget, event, text)
-        nodeLayout.size.height = tonumber(text)
-        runtimeNode:MarkLayoutAsDirty()
-    end)
-    sizeGroup:AddChild(height)
-    
+    container:DoLayout()
 end
+
+-- Helper Functions
+
+NodesTab.AnchorList = {
+        TOPLEFT = "Top Left",
+        TOP = "Top",
+        TOPRIGHT = "Top Right",
+        LEFT = "Left",
+        CENTER = "Center",
+        RIGHT = "Right",
+        BOTTOMLEFT = "Bottom Left",
+        BOTTOM = "Bottom",
+        BOTTOMRIGHT = "Bottom Right"
+    }
+
+function NodesTab.CreateDropdown(container, label, value, width, list, callback)
+    local dropdown = AceGUI:Create("Dropdown")
+    dropdown:SetLabel(label)
+    dropdown:SetList(list)
+    dropdown:SetValue(value)
+    dropdown:SetRelativeWidth(width)
+    dropdown:SetCallback("OnValueChanged", function(widget, event, newValue)
+        callback(newValue)
+    end)
+    container:AddChild(dropdown)
+    return dropdown
+end
+
+function NodesTab.CreateNumberInput(container, label, value, width, callback)
+    local input = AceGUI:Create("EditBox")
+    input:SetLabel(label)
+    input:SetText(tostring(value))
+    input:SetRelativeWidth(width)
+    input:DisableButton(true)
+    input:SetCallback("OnEnterPressed", function(widget, event, text)
+        local num = tonumber(text)
+        if num then
+            callback(num)
+        else
+            widget:SetText(tostring(value))  -- Reset to previous value
+        end
+    end)
+    container:AddChild(input)
+    return input
+end
+
+--------------------------------------------
+--- Bindings
+--------------------------------------------
+
+local DataTypeToString = {
+    [DataTypes.Spell] = "Spell",
+    [DataTypes.Aura] = "Aura",
+    [DataTypes.Item] = "Item",
+    [DataTypes.Resource] = "Resource"
+}
+
+function NodesTab.BuildBindingsPanel(container)
+    local runtimeNode = RuntimeNodeManager.lookupTable[NodesTab.selectedNodeGuid]
+    local node = runtimeNode.node
+    
+    container:SetLayout("Flow")
+    
+    -- Add Binding Button
+    local addButton = AceGUI:Create("Button")
+    addButton:SetText("Add Binding")
+    addButton:SetFullWidth(true)
+    addButton:SetCallback("OnClick", function()
+        NodesTab.ShowBindingEditor(node.guid, nil)  -- nil = create new
+    end)
+    container:AddChild(addButton)
+    
+    -- Spacer
+    local spacer = AceGUI:Create("Label")
+    spacer:SetText(" ")
+    spacer:SetFullWidth(true)
+    container:AddChild(spacer)
+    
+    -- Existing Bindings List
+    local bindingsGroup = AceGUI:Create("InlineGroup")
+    bindingsGroup:SetTitle("Bindings (" .. #node.bindings .. ")")
+    bindingsGroup:SetFullWidth(true)
+    bindingsGroup:SetLayout("Flow")
+    container:AddChild(bindingsGroup)
+    
+    if #node.bindings == 0 then
+        local emptyLabel = AceGUI:Create("Label")
+        emptyLabel:SetText("No bindings. Click 'Add Binding' to create one.")
+        emptyLabel:SetFullWidth(true)
+        bindingsGroup:AddChild(emptyLabel)
+    else
+        for i, binding in ipairs(node.bindings) do
+            local bindingRow = AceGUI:Create("SimpleGroup")
+            bindingRow:SetFullWidth(true)
+            bindingRow:SetLayout("Flow")
+            bindingsGroup:AddChild(bindingRow)
+            
+            -- Icon (if available)
+            local icon = NodesTab.GetBindingIcon(binding)
+            if icon then
+                local iconWidget = AceGUI:Create("Icon")
+                iconWidget:SetImage(icon)
+                iconWidget:SetImageSize(24, 24)
+                iconWidget:SetWidth(32)
+                bindingRow:AddChild(iconWidget)
+            end
+            
+            -- Alias + Type/ID info
+            local infoLabel = AceGUI:Create("Label")
+            infoLabel:SetText(string.format("%s\n|cFF888888%s: %s|r", 
+                binding.alias, 
+                DataTypeToString[binding.type], 
+                tostring(binding.key)))
+            infoLabel:SetRelativeWidth(0.6)
+            bindingRow:AddChild(infoLabel)
+            
+            -- Edit button
+            local editButton = AceGUI:Create("Button")
+            editButton:SetText("Edit")
+            editButton:SetWidth(60)
+            editButton:SetCallback("OnClick", function()
+                NodesTab.ShowBindingEditor(node.guid, i)
+            end)
+            bindingRow:AddChild(editButton)
+            
+            -- Delete button
+            local deleteButton = AceGUI:Create("Button")
+            deleteButton:SetText("Delete")
+            deleteButton:SetWidth(120)
+            deleteButton:SetCallback("OnClick", function()
+                runtimeNode:RemoveBinding(i)
+                container:ReleaseChildren()
+                NodesTab.BuildBindingsPanel(container)
+            end)
+            bindingRow:AddChild(deleteButton)
+        end
+    end
+end
+
+-- Binding Editor Dialog
+function NodesTab.ShowBindingEditor(nodeGuid, bindingIndex)
+    local runtimeNode = RuntimeNodeManager.lookupTable[nodeGuid]
+    local node = runtimeNode.node
+    if not node then return end
+    
+    local isEdit = bindingIndex ~= nil
+    local binding = isEdit and node.bindings[bindingIndex] or {
+        type = DataTypes.Spell,
+        alias = "",
+        key = ""
+    }
+    
+    -- Create editor frame
+    local frame = AceGUI:Create("Window")
+    frame:SetTitle(isEdit and "Edit Binding" or "Create Binding")
+    frame:SetLayout("Flow")
+    frame:SetWidth(400)
+    frame:SetHeight(300)
+    frame:SetCallback("OnClose", function(widget)
+        AceGUI:Release(widget)
+    end)
+    
+    -- Type dropdown
+    local typeDropdown = AceGUI:Create("Dropdown")
+    typeDropdown:SetLabel("Type")
+    typeDropdown:SetList({
+        [DataTypes.Spell] = "Spell",
+        [DataTypes.Aura] = "Aura",
+        [DataTypes.Item] = "Item",
+        [DataTypes.Resource] = "Resource"
+    })
+    typeDropdown:SetValue(binding.type)
+    typeDropdown:SetFullWidth(true)
+    frame:AddChild(typeDropdown)
+    
+    -- Alias input
+    local aliasInput = AceGUI:Create("EditBox")
+    aliasInput:SetLabel("Alias (Display Name)")
+    aliasInput:SetText(binding.alias)
+    aliasInput:SetFullWidth(true)
+    aliasInput:DisableButton(true)
+    frame:AddChild(aliasInput)
+    
+    -- Key input
+    local keyInput = AceGUI:Create("EditBox")
+    keyInput:SetLabel("ID (Spell/Aura/Item/Resource ID)")
+    keyInput:SetText(tostring(binding.key))
+    keyInput:SetFullWidth(true)
+    keyInput:DisableButton(true)
+    frame:AddChild(keyInput)
+    
+    -- Options section (if needed later)
+    -- local optionsGroup = AceGUI:Create("InlineGroup")
+    -- optionsGroup:SetTitle("Options")
+    -- optionsGroup:SetFullWidth(true)
+    -- optionsGroup:SetLayout("Flow")
+    -- frame:AddChild(optionsGroup)
+    
+    -- Buttons
+    local buttonGroup = AceGUI:Create("SimpleGroup")
+    buttonGroup:SetFullWidth(true)
+    buttonGroup:SetLayout("Flow")
+    frame:AddChild(buttonGroup)
+    
+    local saveButton = AceGUI:Create("Button")
+    saveButton:SetText(isEdit and "Save" or "Create")
+    saveButton:SetWidth(120)
+    saveButton:SetCallback("OnClick", function()
+        local newBinding = {
+            type = typeDropdown:GetValue(),
+            alias = aliasInput:GetText(),
+            key = tonumber(keyInput:GetText()) or keyInput:GetText()
+        }
+        
+        if newBinding.alias == "" or newBinding.key == "" then
+            print("Alias and ID are required")
+            return
+        end
+        
+        if isEdit then
+            runtimeNode:UpdateBinding(bindingIndex, newBinding)
+        else
+            runtimeNode:AddBinding(newBinding)
+        end       
+        frame:Hide()
+    end)
+    buttonGroup:AddChild(saveButton)
+end
+
+--------------------------------------------
+--- Context Menu
+--------------------------------------------
+
+function NodesTab.OpenContextMenu(frame, guid)
+    local menu = MenuUtil.CreateContextMenu(frame, function (ownerRegion, description)
+        description:CreateTitle(frame.value)
+
+        description:CreateButton("Add Child Node", function()
+            NodesTab.ShowAddNodeDialog(guid)
+        end)
+        
+        description:CreateButton("Duplicate", function()
+            NodesTab.DuplicateNode(guid)
+        end)
+        
+        -- description:CreateDivider()
+        
+        -- description:CreateButton("Move Up", function()
+        --     NodesTab.MoveNode(guid, -1)
+        -- end)
+        
+        -- description:CreateButton("Move Down", function()
+        --     NodesTab.MoveNode(guid, 1)
+        -- end)
+        
+        -- description:CreateDivider()
+        
+        -- description:CreateButton("Copy", function()
+        --     NodesTab.CopyNode(guid)
+        -- end)
+        
+        -- description:CreateButton("Paste as Child", function()
+        --     NodesTab.PasteNode(guid)
+        -- end)
+        
+        description:CreateDivider()
+        
+        description:CreateButton("Rename", function()
+            NodesTab.ShowRenameDialog(guid)
+        end)
+        
+        description:CreateButton("Delete", function() --TODO: Make sure to delete the node in the node tables aswell, right now we just do it for the runtime node.
+            RuntimeNodeManager.RemoveNode(guid)
+        end)
+    end)
+
+    --Make menu appear on top
+    if menu then
+        menu:SetFrameStrata("TOOLTIP")
+    end
+end
+
+--------------------------------------------
+--- Utility
+--------------------------------------------
+
+function NodesTab.GetBindingIcon(binding)
+    if binding.type == DataTypes.Spell or binding.type == DataTypes.Aura then
+        local spellInfo = C_Spell.GetSpellInfo(binding.key)
+        return spellInfo and spellInfo.iconID
+    elseif binding.type == DataTypes.Item then
+        local itemInfo = C_Item.GetItemIconByID(binding.key)
+        return itemInfo
+    end
+    return QuestionMark
+end
+
 
 --TODO: Dont rebuild the whole ui everytime. Right now its just easier
 function NodesTab.Refresh()

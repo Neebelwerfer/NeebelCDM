@@ -79,6 +79,23 @@ function RuntimeNode:Destroy() --TODO: Should this cleanup children itself? I th
     end
 end
 
+function RuntimeNode:AddBinding(binding)
+    table.insert(self.node.bindings, binding)
+    DataContext.RegisterBinding(self.node.guid, binding)
+end
+
+function RuntimeNode:UpdateBinding(index, newBinding)
+    DataContext.UnregisterBinding(self.node.guid, self.node.bindings[index])
+    self.node.bindings[index] = newBinding
+    DataContext.RegisterBinding(self.node.guid, newBinding)
+end
+
+function RuntimeNode:RemoveBinding(index)
+    local binding = self.node.bindings[index]
+    DataContext.UnregisterBinding(self.node.guid, binding)
+    table.remove(self.node.bindings, index)
+end
+
 ------------------------------------
 --- Update layout
 ------------------------------------

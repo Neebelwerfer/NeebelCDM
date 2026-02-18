@@ -13,14 +13,22 @@ Early phase - Just figuring out the structure and experimenting
     - [x] Vertical/Horizontal
     - [x] Trailing/Centered/Leading
     - [ ] Wrapping
-- [ ] Add ingame editor
+- [ ] Add in game editor
     - [ ] Node list
-    - [ ] Editable nodes
+        - [x] Context Menu
+        - [ ] Drag and Drop
+        - [ ] Movable node when selected in the hierarchy
     - [ ] Property settings
-    - [-] Node layout settings
+        - [ ] Icon
+        - [ ] Cooldown
+        - [ ] Text
+        - [ ] Bar
+    - [ ] Node layout settings
         - [x] Basic layout settings
         - [ ] Dynamic group settings
-    - [ ] Bindings menu
+    - [x] Bindings menu
+        - [x] Binding Creation
+        - [x] Binding list and deletion
     - [x] Additional CDM options menu
 - [ ] Events?
     - [ ] Spell Events (Going off/on cd, getting full charges)
@@ -34,6 +42,9 @@ Early phase - Just figuring out the structure and experimenting
     - [ ] Make sure we dont update static properties since they never change
     - [ ] Remake the whole Blizzard Manager integration and aura and blizzard manager hooks to be more stable
     - [ ] Make dynamic group actually change layout settings for children so it wont get awkward later
+- [ ] Fixes
+    - [ ] Layout: Anchor point seems to behaver weirdly
+    - [ ] Layout/Editor: Scroll frame not working properly
 
 ## The goal
-The goal of this project is to learn a bit about WoW api and Data-driven design in terms of creating modular UI
+The goal of this project is to learn a bit about WoW Api and Data-driven design in terms of creating modular UI
