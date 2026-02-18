@@ -17,6 +17,9 @@ Early phase - Just figuring out the structure and experimenting
     - [ ] Node list
     - [ ] Editable nodes
     - [ ] Property settings
+    - [-] Node layout settings
+        - [x] Basic layout settings
+        - [ ] Dynamic group settings
     - [ ] Bindings menu
     - [x] Additional CDM options menu
 - [ ] Events?
@@ -30,6 +33,7 @@ Early phase - Just figuring out the structure and experimenting
     - [ ] Split the frame update functions into multiple functions, one for each property
     - [ ] Make sure we dont update static properties since they never change
     - [ ] Remake the whole Blizzard Manager integration and aura and blizzard manager hooks to be more stable
+    - [ ] Make dynamic group actually change layout settings for children so it wont get awkward later
 
 ## The goal
 The goal of this project is to learn a bit about WoW api and Data-driven design in terms of creating modular UI

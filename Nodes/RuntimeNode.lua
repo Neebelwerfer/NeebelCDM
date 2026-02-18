@@ -39,6 +39,7 @@ end
 function RuntimeNode:UpdateTransforms()
     local parentFrame = self.parentRuntimeNode and self.parentRuntimeNode.rootFrame or UIParent
 
+    self.rootFrame:ClearAllPoints()
     self.rootFrame:SetSize(self.node.layout.size.width, self.node.layout.size.height)
     self.rootFrame:SetPoint(self.node.transform.point, parentFrame, self.node.transform.relativePoint, self.node.transform.offsetX, self.node.transform.offsetY)
     self.rootFrame:SetScale(self.node.transform.scale)
@@ -132,6 +133,7 @@ function RuntimeNode:ApplyDynamicLayout()
     end
 
     for _, child in pairs(children) do
+        child.rootFrame:ClearAllPoints()
         local childHeight = isHorizontal and child.rootFrame:GetWidth() or child.rootFrame:GetHeight()
         local offsetY = currentOffset + childHeight * centerOffset
 

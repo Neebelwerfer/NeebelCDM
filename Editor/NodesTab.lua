@@ -177,7 +177,7 @@ function NodesTab.OnInspectorTabSelected(container, event, group)
     if group == "properties" then
         NodesTab.BuildPropertiesPanel(container)
     elseif group == "layout" then
-        --NodesTab.BuildLayoutPanel(container)
+        NodesTab.BuildLayoutPanel(container)
     elseif group == "bindings" then
         --NodesTab.BuildBindingsPanel(container)
     end
@@ -339,6 +339,104 @@ function NodesTab.BuildPropEditor(container, label, propDescriptor, valueType, o
         bindingLabel:SetFullWidth(true)
         container:AddChild(bindingLabel)
     end
+end
+
+--- Build the layout panel which should help with arranging frames.
+---@param container AceGUIContainer
+function NodesTab.BuildLayoutPanel(container)
+    local runtimeNode = RuntimeNodeManager.lookupTable[NodesTab.selectedNodeGuid]
+    local nodeLayout = runtimeNode.node.layout
+    local nodeTransform = runtimeNode.node.transform
+    
+    local group = AceGUI:Create("SimpleGroup")
+    group:SetFullWidth(true)
+    group:SetLayout("Flow")
+    container:AddChild(group)
+
+    --Alignment
+    local alignmentGroup = AceGUI:Create("InlineGroup")
+    alignmentGroup:SetTitle("Alignment")
+    alignmentGroup:SetFullWidth(true)
+    alignmentGroup:SetLayout("Flow")
+    group:AddChild(alignmentGroup)
+
+    local anchor = AceGUI:Create("Dropdown")
+    anchor:SetLabel("Anchor")
+    anchor:SetList({TOPLEFT="Top Left", TOP="Top", TOPRIGHT="Top Right", LEFT="Left", CENTER="Center", RIGHT="Right", BOTTOMLEFT="Bottom Left", BOTTOM="Bottom", BOTTOMRIGHT="Bottom Right"})
+    anchor:SetValue(nodeTransform.point)
+    anchor:SetRelativeWidth(0.5)
+    anchor:SetCallback("OnValueChanged", function(widget, event, value)
+        print ("Anchor changed to " .. value)
+        nodeTransform.point = value
+        runtimeNode:MarkLayoutAsDirty()
+    end)
+    alignmentGroup:AddChild(anchor)
+
+    local relative = AceGUI:Create("Dropdown")
+    relative:SetLabel("Relative To")
+    relative:SetList({TOPLEFT="Top Left", TOP="Top", TOPRIGHT="Top Right", LEFT="Left", CENTER="Center", RIGHT="Right", BOTTOMLEFT="Bottom Left", BOTTOM="Bottom", BOTTOMRIGHT="Bottom Right"})
+    relative:SetValue(nodeTransform.relativePoint)
+    relative:SetRelativeWidth(0.5)
+    relative:SetCallback("OnValueChanged", function(widget, event, value)
+        nodeTransform.relativePoint = value
+        runtimeNode:MarkLayoutAsDirty()
+    end)
+    alignmentGroup:AddChild(relative)
+    
+    --Position
+    local positionGroup = AceGUI:Create("InlineGroup")
+    positionGroup:SetTitle("Position")
+    positionGroup:SetFullWidth(true)
+    positionGroup:SetLayout("Flow")
+    group:AddChild(positionGroup)
+    
+    local x = AceGUI:Create("EditBox")
+    x:SetLabel("X")
+    x:SetText(tostring(nodeTransform.offsetX))
+    x:SetRelativeWidth(0.5)
+    x:SetCallback("OnEnterPressed", function(widget, event, text)
+        nodeTransform.offsetX = tonumber(text)
+        runtimeNode:MarkLayoutAsDirty()
+    end)
+    positionGroup:AddChild(x)
+    
+    local y = AceGUI:Create("EditBox")
+    y:SetLabel("Y")
+    y:SetText(tostring(nodeTransform.offsetY))
+    y:SetRelativeWidth(0.5)
+    y:SetCallback("OnEnterPressed", function(widget, event, text)
+        nodeTransform.offsetY = tonumber(text)
+        runtimeNode:MarkLayoutAsDirty()
+    end)
+    positionGroup:AddChild(y)
+    
+    --Size
+    local sizeGroup = AceGUI:Create("InlineGroup")
+    sizeGroup:SetTitle("Size")
+    sizeGroup:SetFullWidth(true)
+    sizeGroup:SetLayout("Flow")
+    group:AddChild(sizeGroup)
+
+    local width = AceGUI:Create("EditBox")
+    width:SetLabel("Width")
+    width:SetText(tostring(nodeLayout.size.width))
+    width:SetRelativeWidth(0.5)
+    width:SetCallback("OnEnterPressed", function(widget, event, text)
+        nodeLayout.size.width = tonumber(text)
+        runtimeNode:MarkLayoutAsDirty()
+    end)
+    sizeGroup:AddChild(width)
+    
+    local height = AceGUI:Create("EditBox")
+    height:SetLabel("Height")
+    height:SetText(tostring(nodeLayout.size.height))
+    height:SetRelativeWidth(0.5)
+    height:SetCallback("OnEnterPressed", function(widget, event, text)
+        nodeLayout.size.height = tonumber(text)
+        runtimeNode:MarkLayoutAsDirty()
+    end)
+    sizeGroup:AddChild(height)
+    
 end
 
 --TODO: Dont rebuild the whole ui everytime. Right now its just easier
