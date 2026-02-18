@@ -67,6 +67,16 @@ function RuntimeNode:Update()
     end
 end
 
+function RuntimeNode:Destroy() --TODO: Should this cleanup children itself? I think it should
+    self.rootFrame:Destroy() -- The root frame destroys itself and its children returning them to the frame pool
+
+    for _, binding in ipairs(self.node.bindings) do
+        DataContext.UnregisterBinding(self.guid, binding)
+    end
+    if self.parentRuntimeNode then
+        self.parentRuntimeNode:MarkLayoutAsDirty()
+    end
+end
 
 ------------------------------------
 --- Update layout

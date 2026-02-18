@@ -51,3 +51,7 @@ end
 function PropertyFrame:UpdateProperties(resolvedProps)
     self.ApplyProperties(self.frame, resolvedProps)
 end
+
+function PropertyFrame:Destroy()
+    
+end

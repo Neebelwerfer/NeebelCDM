@@ -13,4 +13,4 @@ end
 
 
 QuestionMark = "Interface\\Icons\\INV_Misc_QuestionMark"
-AddSign = "Interface\\Icons\\INV_Inscription_ScrollOfWisdom"  --should be the + icon
+AddSign = 450907  --should be the + icon

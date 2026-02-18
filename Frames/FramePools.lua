@@ -4,19 +4,12 @@ FramePools = {}
 --- Root
 --------------------------------------------
 local function RootFrameInit(frame)
-    -- Adding movement scripts, starts disabled
-    frame:SetScript("OnMouseDown", function(self, button)
-        self:StartMoving()
-    end)
-    frame:SetScript("OnMouseUp", function(self, button)
-        self:StopMovingOrSizing()
-        
-    end)
-    frame:SetMovable(true)
-    frame:EnableMouse(false)
-
     frame.frames = {}
     frame.frameType = "Root"
+
+    frame.Destroy = function(self)
+        FramePools.ReleaseFrame(self)
+    end
 end
 
 local function RootFrameReset(_, frame)
@@ -42,7 +35,7 @@ local function IconFrameReset(_, frame)
     frame:Hide()
 
     for _, child in ipairs(frame.cooldowns) do
-        local childFrame = child
+        local childFrame = child.frame
         FramePools.ReleaseFrame(childFrame)
     end
     table.wipe(frame.cooldowns)
@@ -136,5 +129,6 @@ function FramePools.AquireFrame(type, parent)
 end
 
 function FramePools.ReleaseFrame(frame)
+    assert(frame.frameType and FramePools.pools[frame.frameType], "Invalid frame type" .. (frame.frameType or ""))
     FramePools.pools[frame.frameType]:Release(frame)
 end

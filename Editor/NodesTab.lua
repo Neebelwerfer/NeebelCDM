@@ -120,8 +120,8 @@ function NodesTab.OpenContextMenu(frame, guid)
             NodesTab.ShowRenameDialog(guid)
         end)
         
-        description:CreateButton("Delete", function()
-            NodesTab.DeleteNode(guid)
+        description:CreateButton("Delete", function() --TODO: Make sure to delete the node in the node tables aswell, right now we just do it for the runtime node.
+            RuntimeNodeManager.RemoveNode(guid)
         end)
     end)
 
@@ -138,7 +138,6 @@ function NodesTab.OnNodeSelected(container, event, path)
         if not AceHook:IsHooked(button, "OnClick") and button.value ~= "add" then
             AceHook:HookScript(button, "OnClick", function(frame, mouseButton)
                 if mouseButton == "RightButton" then
-                    print("Right click")
                     NodesTab.OpenContextMenu(frame, frame.value)
                 end
             end)
