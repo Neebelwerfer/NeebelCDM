@@ -1,6 +1,6 @@
 local _, ns = ...
 local AceGUI = LibStub("AceGUI-3.0")
-local FrameTypes = ns.Core.FrameTypes
+local FrameTypes = ns.Frames.FrameTypes
 local RuntimeNodeManager = ns.Nodes.RuntimeNodeManager
 
 local PropertiesPanel = {}

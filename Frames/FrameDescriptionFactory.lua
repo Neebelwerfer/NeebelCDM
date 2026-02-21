@@ -20,13 +20,14 @@ local PropertyFactory = ns.Frames.PropertyFactory
 ---@field frameLevel? number
 
 ---@enum Frame.FrameTypes
-FrameTypes = {
+ns.Frames.FrameTypes = {
     Icon = 1,
     Bar = 2,
     Text = 3,
     IconButton = 4,
     TextButton = 5
 }
+local FrameTypes = ns.Frames.FrameTypes
 
 ---Default transform
 ---@return Transform

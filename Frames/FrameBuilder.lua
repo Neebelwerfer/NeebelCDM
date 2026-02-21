@@ -1,10 +1,11 @@
 local _, ns = ...
+local FramePools = ns.Frames.FramePools
+local PropertyFrame = ns.Frames.PropertyFrame
+local FrameTypes = ns.Frames.FrameTypes
 
 FrameBuilder = {}
 ns.Frames.FrameBuilder = FrameBuilder
 
-local FramePools = ns.Frames.FramePools
-local PropertyFrame = ns.Frames.PropertyFrame
 
 ---@param node Node
 ---@param parentFrame Frame
