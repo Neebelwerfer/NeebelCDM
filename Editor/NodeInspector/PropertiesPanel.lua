@@ -77,7 +77,7 @@ function PropertiesPanel.BuildIconProperties(container, descriptor, runtimeNode)
     local NodesTab = ns.Editor.NodesTab
     local props = descriptor.props
     local transform = descriptor.transform
-    
+
     local offsetX = AceGUI:Create("EditBox")
     offsetX:SetLabel("Offset X")
     offsetX:SetText(transform.offsetX)
@@ -424,7 +424,9 @@ function PropertiesPanel.BuildTextProperties(container, descriptor, runtimeNode)
     container:AddChild(fontColor)
 
 
-    local text = AceGUI:Create("EditBox")
+    local text = AceGUI:Create("MultiLineEditBox")
+    text:SetNumLines(3)
+    text:SetRelativeWidth(1)
     text:SetText(props.text.value)
     text:SetCallback("OnEnterPressed", function(widget, event, value)
         props.text.value = value
