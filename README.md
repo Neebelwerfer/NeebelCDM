@@ -26,13 +26,9 @@ Early phase - Just figuring out the structure and experimenting
         - [x] Icon
         - [x] Cooldown
         - [x] Text
-        - [ ] Bar
+        - [ ] Bar 
     - [x] Node layout settings
-        - [x] Basic layout settings
-        - [x] Dynamic group settings
     - [x] Bindings menu
-        - [x] Binding Creation
-        - [x] Binding list and deletion
     - [x] Additional CDM options menu
 - [ ] Events?
     - [ ] Spell Events (Going off/on cd, getting full charges)

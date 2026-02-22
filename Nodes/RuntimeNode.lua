@@ -232,10 +232,10 @@ function RuntimeNode:ResolveProp(prop)
             end
         end
         return nil
-    elseif prop.resolveType == "template" then
+    elseif prop.resolveType == "template" then --TODO: Look into caching here!!
         local bindings = {}
         -- find bindings from the template indicated by {binding:field}
-        for alias, field in string.gmatch(prop.value, "{(.+):(.+)}") do
+        for alias, field in string.gmatch(prop.value, "{([^}:]+):([^}]+)}") do
             local binding = self:FindBinding(alias)
             if binding then
                 if not bindings[alias..":"..field] then
