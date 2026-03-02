@@ -24,52 +24,18 @@ function PropertiesPanel.Build(container)
     if next(node.frames) then
         local previewGroup = AceGUI:Create("SimpleGroup")
         previewGroup:SetFullWidth(true)
-        previewGroup:SetLayout("Flow")
+        previewGroup:SetLayout("Fill")
         previewGroup:SetHeight(300)
         scroll:AddChild(previewGroup)
 
         local previewCanvas = AceGUI:Create("PreviewCanvas")
         previewCanvas:SetRelativeWidth(0.7)
+        previewCanvas:SetHeight(300)
         previewCanvas:SetNode(runtimeNode.node)
         previewGroup:AddChild(previewCanvas)
-
-        local componentGroup = AceGUI:Create("InlineGroup")
-        componentGroup:SetTitle("Components")
-        componentGroup:SetRelativeWidth(0.3)
-        componentGroup:SetFullHeight(true)
-        componentGroup:SetLayout("Flow")
-        previewGroup:AddChild(componentGroup)
-
-
-        for frameName, propertyFrame in pairs(runtimeNode.rootFrame.frames) do
-            local component = AceGUI:Create("InteractiveLabel")
-            component:SetText(frameName)
-            componentGroup:AddChild(component)
-        end
-
     end
-
-    -- -- Node metadata
-    -- local metaGroup = AceGUI:Create("InlineGroup")
-    -- metaGroup:SetTitle("General Properties")
-    -- metaGroup:SetFullWidth(true)
-    -- metaGroup:SetLayout("Flow")
-    -- scroll:AddChild(metaGroup)
-
-    -- -- Name
-    -- local nameInput = AceGUI:Create("EditBox")
-    -- nameInput:SetLabel("Node Name")
-    -- nameInput:SetText(node.name or "")
-    -- nameInput:SetFullWidth(true)
-    -- nameInput:SetCallback("OnEnterPressed", function(widget, event, text)
-    --     node.name = text
-    --     NodesTab.RepaintTree()
-    -- end)
-    -- metaGroup:AddChild(nameInput)
     
     --Frame-specific properties for each frame descriptor
-
-    
     for frameName, propertyFrame in pairs(runtimeNode.rootFrame.frames) do
         local descriptor = propertyFrame.descriptor
         

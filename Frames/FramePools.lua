@@ -48,14 +48,14 @@ local function IconFrameReset(_, frame)
 end
 
 local function IconFrameInit(frame)
-    frame.tex = frame:CreateTexture(nil, "OVERLAY")
-    frame.tex:SetAllPoints(frame)
+    frame.tex = frame:CreateTexture(nil, "ARTWORK")
+    frame.tex:SetAllPoints()
 
     frame.cooldowns = {}
     frame.frameType = "Icon"
 end
 
-FramePools.icon = CreateFramePool("Frame", nil, "BackdropTemplate", IconFrameReset, nil, IconFrameInit)
+FramePools.icon = CreateFramePool("Frame", nil, nil, IconFrameReset, nil, IconFrameInit)
 
 --------------------------------------------
 --- Text

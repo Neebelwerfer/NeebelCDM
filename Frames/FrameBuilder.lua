@@ -105,8 +105,9 @@ function FrameBuilder.ApplyIconProps(frame, resolvedProps)
     local icon = resolvedProps.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
     
     frame.tex:SetTexture(icon or 134400)
+    frame.tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     frame.tex:SetVertexColor(color.r, color.g, color.b, color.a)
-
+    
     if resolvedProps.cooldowns then
         for i, cd in ipairs(frame.cooldowns) do
             FrameBuilder.ApplyCooldownProps(cd.frame, resolvedProps.cooldowns[i])
