@@ -68,15 +68,34 @@ local function BuildComponentList(widget, frame)
 
         local first = true
         for _, frameDescriptor in pairs(node.frames) do
-            local button = AceGUI:Create("InteractiveLabel")
+            local button = AceGUI:Create("Button")
             button:SetText(frameDescriptor.name)
+            button:SetFullWidth(true)
+            
+            local tex = "Interface\\Buttons\\WHITE8X8"
+            button.frame:SetNormalTexture(tex)
+            button.frame:SetPushedTexture(tex)
+            button.frame:SetHighlightTexture(tex)
+            button.frame:SetDisabledTexture(tex)
+            
+            button.frame:GetNormalTexture():SetVertexColor(0.1,0.1,0.1,0.9)
+            button.frame:GetPushedTexture():SetVertexColor(0.05,0.05,0.05,1)
+            button.frame:GetHighlightTexture():SetVertexColor(1,1,1,0.1)
+            button.frame:GetDisabledTexture():SetVertexColor(0.2,0.2,0.2,0.5)
 
             button:SetCallback("OnClick", function(button)
                 widget:Fire("OnComponentSelected", frameDescriptor)
+                button:SetDisabled(true)
+                if inspector.selected then
+                    inspector.selected:SetDisabled(false)
+                end
+                inspector.selected = button
             end)
 
             if first then
                 widget:Fire("OnComponentSelected", frameDescriptor)
+                inspector.selected = button
+                button:SetDisabled(true)
                 first = false
             end
 
