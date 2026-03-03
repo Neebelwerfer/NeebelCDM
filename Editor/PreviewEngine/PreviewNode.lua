@@ -78,7 +78,6 @@ function PreviewNode:UpdateTransforms()
     self.rootFrame:ClearAllPoints()
     self.rootFrame:SetSize(self.node.layout.size.width, self.node.layout.size.height)
     self.rootFrame:SetPoint("CENTER", self.rootFrame:GetParent(), "CENTER", 0, 0)
-    self.rootFrame:SetScale(self.node.transform.scale)
 
     for _, frameContext in pairs(self.rootFrame.frames) do
         local descriptor = frameContext.descriptor
