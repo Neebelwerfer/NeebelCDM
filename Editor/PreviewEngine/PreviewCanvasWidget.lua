@@ -53,6 +53,61 @@ local function BuildCanvas(widget, frame)
             widget.node:Update(deltaTime)
         end
     end)
+
+
+    local overlayFrame = CreateFrame("Frame", nil, canvas, "BackdropTemplate")
+    overlayFrame:SetBackdrop({
+        edgeFile = "Interface\\Buttons\\WHITE8X8",
+        edgeSize = 1,
+        bgFile = "Interface\\Buttons\\WHITE8X8",
+    })
+    overlayFrame:SetBackdropColor(0, 0, 0, 0.3)
+    overlayFrame:SetBackdropBorderColor(0, 1, 0, 0.8)
+    overlayFrame:Hide()
+    overlayFrame:EnableMouse(true)
+    overlayFrame:SetMovable(true)
+    overlayFrame:RegisterForDrag("LeftButton")
+    overlayFrame.isMoving = false
+
+    overlayFrame:SetScript("OnMouseDown", function(overlay)
+        overlay.isMoving = true
+        local scale = overlay:GetEffectiveScale()
+        local cursorX, cursorY = GetCursorPosition()
+
+        overlay.cursorX = cursorX
+        overlay.cursorY = cursorY
+    end)
+
+    overlayFrame:SetScript("OnMouseUp", function(overlay)
+        overlay.isMoving = false
+    end)
+    overlayFrame:SetScript("OnDragStop", function(overlay)
+        overlay.isMoving = false
+    end)
+
+    overlayFrame:SetScript("OnUpdate", function(overlay, deltaTime)
+        if not overlay.isMoving then return end
+
+        local scale = overlay:GetEffectiveScale()
+        local cursorX, cursorY = GetCursorPosition()
+        local deltaX = cursorX - overlay.cursorX
+        local deltyY = cursorY - overlay.cursorY
+
+        overlay.cursorX = cursorX
+        overlay.cursorY = cursorY
+
+        local _, _, _, x, y = overlay:GetPoint()
+        local offsetX = x + deltaX
+        local offsetY = y + deltyY
+        overlay:ClearAllPoints()
+        overlay:SetPoint("CENTER", overlay:GetParent(), "CENTER", offsetX, offsetY)
+        if overlay.frameDescriptor then
+            overlay.frameDescriptor.transform.offsetX = math.floor(offsetX + 0.5)
+            overlay.frameDescriptor.transform.offsetY = math.floor(offsetY + 0.5)
+            widget.node:MarkLayoutAsDirty()
+        end
+    end)
+    widget.overlayFrame = overlayFrame
 end
 
 local function BuildComponentList(widget, frame)
@@ -72,29 +127,30 @@ local function BuildComponentList(widget, frame)
             local button = AceGUI:Create("InspectorButton")
             button:SetText(frameDescriptor.name)
             button:SetFullWidth(true)
-            
-            -- local tex = "Interface\\Buttons\\WHITE8X8"
-            -- button.frame:SetNormalTexture(tex)
-            -- button.frame:SetPushedTexture(tex)
-            -- button.frame:SetHighlightTexture(tex)
-            -- button.frame:SetDisabledTexture(tex)
-            
-            -- button.frame:GetNormalTexture():SetVertexColor(0.1,0.1,0.1,0.9)
-            -- button.frame:GetPushedTexture():SetVertexColor(0.05,0.05,0.05,1)
-            -- button.frame:GetHighlightTexture():SetVertexColor(1,1,1,0.1)
-            -- button.frame:GetDisabledTexture():SetVertexColor(0.2,0.2,0.2,0.5)
 
             button:SetCallback("OnClick", function(button)
                 widget:Fire("OnComponentSelected", frameDescriptor)
+                widget.overlayFrame:Show()
                 button:Disable()
                 if inspector.selected then
                     inspector.selected.button:Enable()
                 end
+
+                widget.overlayFrame:ClearAllPoints()
+                widget.overlayFrame:SetPoint("CENTER", widget.node.rootFrame, "CENTER", frameDescriptor.transform.offsetX, frameDescriptor.transform.offsetY)
+                widget.overlayFrame.frameDescriptor = frameDescriptor
+
                 inspector.selected = { button = button, frameDescriptor = frameDescriptor }
             end)
 
             if first then
                 widget:Fire("OnComponentSelected", frameDescriptor)
+
+                
+                widget.overlayFrame:ClearAllPoints()
+                widget.overlayFrame:SetPoint("CENTER", widget.node.rootFrame, "CENTER", frameDescriptor.transform.offsetX, frameDescriptor.transform.offsetY)
+                widget.overlayFrame.frameDescriptor = frameDescriptor
+
                 inspector.selected = { button = button, frameDescriptor = frameDescriptor }
                 button:Disable()
                 first = false
@@ -153,17 +209,22 @@ local function Constructor()
     function widget:ClearNode()
         if not widget.node then return end
         widget.node:Destroy()
-        -- widget.propertyList:Destroy()
+        widget.overlayFrame:SetParent(nil)
         widget.node = nil
     end
 
-    function widget:SetNode(node)
+    function widget:SetNode(runtimeNode)
         if widget.node then
             widget:ClearNode()
         end
 
-        widget.node = previewNode:new(node, self.viewport)
-        widget.componentList:SetupNode(node)
+        widget.node = previewNode:new(runtimeNode, self.viewport)
+        widget.overlayFrame:SetParent(widget.node.rootFrame)
+        widget.overlayFrame:SetSize(widget.node.rootFrame:GetSize())
+        widget.overlayFrame:SetFrameStrata("HIGH")
+        widget.overlayFrame:Show()
+
+        widget.componentList:SetupNode(runtimeNode.node)
         previewDataProvider.Restart()
     end
 
@@ -187,6 +248,7 @@ local function Constructor()
         self.scaleNumber.scaleText:SetText("1")
         self.scaleSlider:SetValue(1)
         self.componentList:ReleaseChildren()
+        self.overlayFrame:Hide()
     end
 
     return AceGUI:RegisterAsWidget(widget)

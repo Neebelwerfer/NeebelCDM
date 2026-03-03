@@ -1,17 +1,20 @@
 local _, ns = ...
 local Core = ns.Core
 local PreviewDataProvider = ns.Editor.Preview.PreviewDataProvider
+local AceHook = LibStub("AceHook-3.0")
 
 local PreviewNode = {}
 PreviewNode.__index = PreviewNode
 ns.Editor.Preview.PreviewNode = PreviewNode
 
 ---comment
----@param node Node
+---@param runtimeNode RuntimeNode
 ---@param parentFrame Frame
 ---@return table
-function PreviewNode:new(node, parentFrame)
+function PreviewNode:new(runtimeNode, parentFrame)
     local previewNode = setmetatable({}, PreviewNode)
+    local node = runtimeNode.node
+    previewNode.runtimeNode = runtimeNode
     previewNode.node = node
 
     previewNode.rootFrame = FrameBuilder.BuildRootFrame(node, parentFrame)
@@ -22,6 +25,19 @@ function PreviewNode:new(node, parentFrame)
         frameContext.frame:SetSize(node.layout.size.width, node.layout.size.height)
         frameContext.frame:SetPoint("CENTER", previewNode.rootFrame, descriptor.transform.relativePoint, descriptor.transform.offsetX, descriptor.transform.offsetY)
     end
+    
+    previewNode.internalState = {
+        dirtyFrames = true,
+        dirtyLayout = true
+    }
+
+    AceHook:Hook(runtimeNode, "MarkFramesAsDirty", function()
+        previewNode.internalState.dirtyFrames = true
+    end)
+
+    AceHook:Hook(runtimeNode, "MarkLayoutAsDirty", function()
+        previewNode.internalState.dirtyLayout = true
+    end)
 
     return previewNode
 end
@@ -30,23 +46,52 @@ function PreviewNode:Update()
     for _, frameContext in pairs(self.rootFrame.frames) do
         self:UpdateFrame(frameContext)
     end
+
+    if self.internalState.dirtyFrames then
+        self:RebuildFrames()
+        self.internalState.dirtyFrames = false
+    end
+
+    if self.internalState.dirtyLayout then
+        self:UpdateTransforms()
+        self.internalState.dirtyLayout = false
+    end
+end
+
+function PreviewNode:MarkFramesAsDirty()
+    self.runtimeNode:MarkFramesAsDirty()
+end
+
+function PreviewNode:MarkLayoutAsDirty()
+    self.runtimeNode:MarkLayoutAsDirty()
+end
+
+function PreviewNode:RebuildFrames()
+    local parentFrame = self.rootFrame:GetParent()
+    self.rootFrame:Destroy()
+    self.rootFrame = FrameBuilder.BuildRootFrame(self.node, parentFrame)
+
+    self:MarkFramesAsDirty()
 end
 
 function PreviewNode:UpdateTransforms()
-    local parentFrame = self.parentRuntimeNode and self.parentRuntimeNode.rootFrame or UIParent
-
     self.rootFrame:ClearAllPoints()
     self.rootFrame:SetSize(self.node.layout.size.width, self.node.layout.size.height)
-    self.rootFrame:SetPoint(self.node.transform.point, parentFrame, self.node.transform.relativePoint, self.node.transform.offsetX, self.node.transform.offsetY)
+    self.rootFrame:SetPoint("CENTER", self.rootFrame:GetParent(), "CENTER", 0, 0)
     self.rootFrame:SetScale(self.node.transform.scale)
 
     for _, frameContext in pairs(self.rootFrame.frames) do
-        frameContext:UpdateTransform(self.node.layout)
+        local descriptor = frameContext.descriptor
+        frameContext.frame:SetSize(self.node.layout.size.width, self.node.layout.size.height)
+        frameContext.frame:SetPoint("CENTER", self.rootFrame, descriptor.transform.relativePoint, descriptor.transform.offsetX, descriptor.transform.offsetY)
     end
 end
 
 function PreviewNode:Destroy()
     self.rootFrame:Destroy()
+
+    AceHook:Unhook(self.runtimeNode, "MarkFramesAsDirty")
+    AceHook:Unhook(self.runtimeNode, "MarkLayoutAsDirty")
 end
 
 

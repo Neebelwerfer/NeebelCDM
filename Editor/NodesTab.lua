@@ -298,7 +298,7 @@ function NodesTab.OverlayNode(guid)
     overlay:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         local point, _, relativePoint, x, y = self:GetPoint()
-        local offsetX, offsetY = NodesTab.ConvertToCenterAnchor(self, point, self:GetParent(), relativePoint, x, y)
+        local offsetX, offsetY = NodesTab.ConvertToCenterAnchor(self, point, x, y)
         runtimeNode.node.transform.offsetX = math.floor(offsetX + 0.5)
         runtimeNode.node.transform.offsetY = math.floor(offsetY + 0.5)
         runtimeNode:MarkLayoutAsDirty()
@@ -308,7 +308,7 @@ function NodesTab.OverlayNode(guid)
 end
 
 --TODO: Might break if relative point is not center
-function NodesTab.ConvertToCenterAnchor(frame, point, relativeFrame, relPoint, x, y)
+function NodesTab.ConvertToCenterAnchor(frame, point, x, y)
     local width, height = UIParent:GetSize()
     local frameWidth, frameHeight = frame:GetSize()
 

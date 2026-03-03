@@ -10,7 +10,7 @@ local PropertiesPanel = {}
 ns.Editor.PropertiesPanel = PropertiesPanel
 
 function PropertiesPanel.Build(container)
-    local NodesTab = ns.Editor.NodesTab --TODO: Look at the dependency graph for this
+    local NodesTab = ns.Editor.NodesTab
     local runtimeNode = RuntimeNodeManager.lookupTable[NodesTab.selectedNodeGuid]
     assert(runtimeNode, "Tree nodes not matching runtime nodes")
     
@@ -18,6 +18,7 @@ function PropertiesPanel.Build(container)
 
     -- Scroll frame for all properties
     local scroll = AceGUI:Create("ScrollFrame")
+    scroll:SetFullWidth(true)
     scroll:SetLayout("Flow")
     container:AddChild(scroll)
 
@@ -58,7 +59,7 @@ function PropertiesPanel.Build(container)
         end)
         previewCanvas:SetCallback("OnAddComponent", PropertiesPanel.OnAddComponent)
 
-        previewCanvas:SetNode(runtimeNode.node)
+        previewCanvas:SetNode(runtimeNode)
     end
 end
 
