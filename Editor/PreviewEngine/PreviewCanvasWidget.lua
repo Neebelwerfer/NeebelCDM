@@ -23,7 +23,7 @@ local function BuildCanvas(widget, frame)
     viewport:SetClipsChildren(true)
     widget.viewport = viewport
 
-    local scaleSlider = CreateFrame("Slider", nil, canvas, "OptionsSliderTemplate")
+    local scaleSlider = CreateFrame("Slider", nil, viewport, "OptionsSliderTemplate")
     scaleSlider:SetPoint("BOTTOMLEFT", 10, 10)
     scaleSlider:SetMinMaxValues(0.5, 3)
     scaleSlider:SetValue(1)
@@ -44,6 +44,47 @@ local function BuildCanvas(widget, frame)
     scaleNumber:SetPoint("CENTER", scaleSlider, "CENTER", scaleSliderWidth / 2 + 12, 0)
     scaleNumber.scaleText:SetAllPoints(scaleNumber)
     widget.scaleNumber = scaleNumber
+
+    local offsetYLabel = viewport:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    offsetYLabel:SetText("Offset Y")
+    offsetYLabel:SetPoint("BOTTOMRIGHT", viewport, "BOTTOMRIGHT", -5, 25)
+
+    local offsetYEditBox = CreateFrame("EditBox", nil, viewport, "InputBoxTemplate")
+    offsetYEditBox:SetPoint("BOTTOMRIGHT", viewport, "BOTTOMRIGHT", -5, 5)
+    offsetYEditBox:SetSize(50, 20)
+    offsetYEditBox:SetAutoFocus(false)
+    offsetYEditBox:SetText("0")
+    offsetYEditBox:SetNumericFullRange(true)
+    offsetYEditBox:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+        if widget.componentList.selected then
+            local frameDescriptor = widget.componentList.selected.frameDescriptor
+            frameDescriptor.transform.offsetY = self:GetNumber()
+            widget.node:MarkLayoutAsDirty()
+        end
+    end)
+    
+    local offsetXLabel = viewport:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    offsetXLabel:SetText("Offset X")
+    offsetXLabel:SetPoint("BOTTOMRIGHT", viewport, "BOTTOMRIGHT", -65, 25)
+    
+    local offsetXEditBox = CreateFrame("EditBox", nil, viewport, "InputBoxTemplate")
+    offsetXEditBox:SetPoint("BOTTOMRIGHT", viewport, "BOTTOMRIGHT", -65, 5)
+    offsetXEditBox:SetSize(50, 20)
+    offsetXEditBox:SetAutoFocus(false)
+    offsetXEditBox:SetText("0")
+    offsetXEditBox:SetNumericFullRange(true)
+    offsetXEditBox:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+        if widget.componentList.selected then
+            local frameDescriptor = widget.componentList.selected.frameDescriptor
+            frameDescriptor.transform.offsetX = self:GetNumber()
+            widget.node:MarkLayoutAsDirty()
+        end
+    end)
+
+    widget.offsetYEditBox = offsetYEditBox
+    widget.offsetXEditBox = offsetXEditBox
     
     -- Update loop for the previewEngine
     canvas:SetScript("OnUpdate", function(self, deltaTime)
@@ -71,7 +112,6 @@ local function BuildCanvas(widget, frame)
 
     overlayFrame:SetScript("OnMouseDown", function(overlay)
         overlay.isMoving = true
-        local scale = overlay:GetEffectiveScale()
         local cursorX, cursorY = GetCursorPosition()
 
         overlay.cursorX = cursorX
@@ -88,7 +128,6 @@ local function BuildCanvas(widget, frame)
     overlayFrame:SetScript("OnUpdate", function(overlay, deltaTime)
         if not overlay.isMoving then return end
 
-        local scale = overlay:GetEffectiveScale()
         local cursorX, cursorY = GetCursorPosition()
         local deltaX = cursorX - overlay.cursorX
         local deltyY = cursorY - overlay.cursorY
@@ -101,9 +140,12 @@ local function BuildCanvas(widget, frame)
         local offsetY = y + deltyY
         overlay:ClearAllPoints()
         overlay:SetPoint("CENTER", overlay:GetParent(), "CENTER", offsetX, offsetY)
-        if overlay.frameDescriptor then
-            overlay.frameDescriptor.transform.offsetX = math.floor(offsetX + 0.5)
-            overlay.frameDescriptor.transform.offsetY = math.floor(offsetY + 0.5)
+        if widget.componentList.selected.frameDescriptor then
+            widget.componentList.selected.frameDescriptor.transform.offsetX = math.floor(offsetX + 0.5)
+            widget.componentList.selected.frameDescriptor.transform.offsetY = math.floor(offsetY + 0.5)
+
+            widget.offsetXEditBox:SetText(math.floor(offsetX + 0.5))
+            widget.offsetYEditBox:SetText(math.floor(offsetY + 0.5))
             widget.node:MarkLayoutAsDirty()
         end
     end)
@@ -138,7 +180,9 @@ local function BuildComponentList(widget, frame)
 
                 widget.overlayFrame:ClearAllPoints()
                 widget.overlayFrame:SetPoint("CENTER", widget.node.rootFrame, "CENTER", frameDescriptor.transform.offsetX, frameDescriptor.transform.offsetY)
-                widget.overlayFrame.frameDescriptor = frameDescriptor
+
+                widget.offsetXEditBox:SetText(frameDescriptor.transform.offsetX)
+                widget.offsetYEditBox:SetText(frameDescriptor.transform.offsetY)
 
                 inspector.selected = { button = button, frameDescriptor = frameDescriptor }
             end)
@@ -146,10 +190,11 @@ local function BuildComponentList(widget, frame)
             if first then
                 widget:Fire("OnComponentSelected", frameDescriptor)
 
-                
                 widget.overlayFrame:ClearAllPoints()
                 widget.overlayFrame:SetPoint("CENTER", widget.node.rootFrame, "CENTER", frameDescriptor.transform.offsetX, frameDescriptor.transform.offsetY)
-                widget.overlayFrame.frameDescriptor = frameDescriptor
+
+                widget.offsetXEditBox:SetText(frameDescriptor.transform.offsetX)
+                widget.offsetYEditBox:SetText(frameDescriptor.transform.offsetY)
 
                 inspector.selected = { button = button, frameDescriptor = frameDescriptor }
                 button:Disable()
